@@ -7,7 +7,8 @@ module.exports.getAllUsers = (req, res) => {
 };
 
 module.exports.getUserById = (req, res) => {
-    User.findById(req.params._id)
+    const userId = req.params.userId;
+    User.findById(userId)
     .then(user => res.send({data: user}))
     .catch(err => res.status(500).send({message: `Ошибка. Пользователь не найден по id. ${err.message}`}))
 };
@@ -18,3 +19,19 @@ module.exports.createUser = (req, res) => {
     .then(user => res.send({data: user}))
     .catch(err => res.status(500).send({message: `Ошибка. Пользователь не создан. ${err.message}`}))
 };
+
+module.exports.updateProfile = (req, res) => {
+    const userId = req.user._id;
+    const {name, about} = req.body
+    User.findByIdAndUpdate(userId, {name, about})
+    .then(user => res.send({user : user}))
+    .catch(err => res.status(500).send({message: `Ошибка. Пользователь не обновлен. ${err.message}`}))
+}
+
+module.exports.updateAvatar = (req, res) => {
+    const userId = req.user._id;
+    const {avatar} = req.body;
+    User.findByIdAndUpdate(userId, {avatar})
+    .then(user => res.send({user: user}))
+    .catch(err => res.status(500).send({message: `Ошибка. Аватар не обновлен. ${err.message}`}))
+}
