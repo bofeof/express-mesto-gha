@@ -1,11 +1,16 @@
 const Card = require('../models/card');
-const {ValidationError, CastError, InternalServerError, UnknownError} = require('../utils/ErrorHandler')
+const defineError = require('../utils/ErrorHandler');
+const errorAnswers = require('../utils/constants').errorAnswers;
+let error;
 
 module.exports.getAllCards = (req, res) => {
   Card.find({})
     .populate(['owner', 'likes'])
     .then((cards) => res.send({ cards: cards }))
-    .catch((err) => res.status(500).send(`Ошибка. Невозможно получить карточки. ${err.name} : ${err.message}`));
+    .catch((err) => {
+      error = defineError(err, errorAnswers.gettingCardsError);
+      res.status(error.statusCode).send({ message: `Ошибка ${error.statusCode}. ${errorAnswers.gettingCardsError}` });
+    });
 };
 
 module.exports.createCard = (req, res) => {
@@ -13,15 +18,24 @@ module.exports.createCard = (req, res) => {
   const { name, link } = req.body;
   Card.create({ name, link, owner })
     .then((card) => res.send({ card: card }))
-    .catch((err) => res.status(500).send(`Ошибка. Невозможно создать карточку. ${err.name} : ${err.message}`));
+    .catch((err) => {
+      error = defineError(err, errorAnswers.creationCardError);
+      res.status(error.statusCode).send({ message: `Ошибка ${error.statusCode}. ${errorAnswers.creationCardError}` });
+    });
 };
 
 module.exports.deleteCardbyId = (req, res) => {
   const cardId = req.params.cardId;
-  Card.findByIdAndRemove(cardId)
+
+  Card.findByIdAndRemove(cardId, (err, removingCard)=>{
+    if(err){
+      error = defineError(err, errorAnswers.removingCardError);
+      res.status(error.statusCode).send({ message: `Ошибка ${error.statusCode}. ${errorAnswers.removingCardError}` });
+      return
+    }
+    res.send({ card: removingCard })
+  })
     .populate(['owner', 'likes'])
-    .then((card) => res.send({ card: card }))
-    .catch((err) => res.status(500).send(`Ошибка. Невозможно удалить карточку. ${err.name} : ${err.message}`));
 };
 
 module.exports.likeCard = (req, res) => {
@@ -30,7 +44,10 @@ module.exports.likeCard = (req, res) => {
   Card.findByIdAndUpdate(cardId, { $addToSet: { likes: userId } }, { new: true })
     .populate(['owner', 'likes'])
     .then((card) => res.send({ card: card }))
-    .catch((err) => res.status(500).send(`Ошибка. Невозможно поставить лайк. ${err.name} : ${err.message}`));
+    .catch((err) => {
+      error = defineError(err, errorAnswers.settingLikeError);
+      res.status(error.statusCode).send({ message: `Ошибка ${error.statusCode}. ${errorAnswers.settingLikeError}` });
+    });
 };
 
 module.exports.dislikeCard = (req, res) => {
@@ -39,5 +56,8 @@ module.exports.dislikeCard = (req, res) => {
   Card.findByIdAndUpdate(cardId, { $pull: { likes: userId } }, { new: true })
     .populate(['owner', 'likes'])
     .then((card) => res.send({ card: card }))
-    .catch((err) => res.status(500).send(`Ошибка. Невозможно снять лайк. ${err.name} : ${err.message}`));
+    .catch((err) => {
+      error = defineError(err, errorAnswers.removingLikeError);
+      res.status(error.statusCode).send({ message: `Ошибка ${error.statusCode}. ${errorAnswers.removingLikeError}` });
+    });
 };

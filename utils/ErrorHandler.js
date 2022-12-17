@@ -15,7 +15,6 @@ function writeDataToLogFile(statusCode, message) {
 module.exports = function defineError(err, message) {
   //400
   if (err.name === 'ValidationError') {
-    console.log(400);
     error = new ValidationError(`Ошибка. ${message}. ${err.name} : ${err.message}`);
     error.logError();
     return error;
@@ -23,14 +22,12 @@ module.exports = function defineError(err, message) {
 
   //404
   if (err.name === 'CastError') {
-    console.log(404);
     error = new CastError(`Ошибка. ${message}. ${err.name} : ${err.message}`);
     error.logError();
     return error;
   }
 
   //500
-  console.log(500);
   error = new InternalServerError(`Ошибка. ${message}. ${err.name} : ${err.message}`);
   error.logError();
   return error;
