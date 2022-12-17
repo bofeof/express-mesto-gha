@@ -3,9 +3,11 @@ const path = require('path');
 const logFile = path.join(__dirname, '/logs/serverLogs.log');
 
 function writeDataToLogFile(message) {
-  const log = `${Date.now}: ${message}`;
-  fs.writeFile(filepath, message, { encoding: 'utf8' }, (err) => {
-    if (err) console.log(err);
+  const log = `${new Date()}: ${message}`;
+  fs.writeFile(filepath, log, { encoding: 'utf8' }, (err) => {
+    if (err) {
+      console.log(err);
+    }
   });
 }
 
@@ -19,20 +21,20 @@ module.exports = class ValidationError extends Error {
   logError() {
     writeDataToLogFile(message);
   }
-}
+};
 
 // 404
-module.exports = class DataNotFoundError extends Error {
+module.exports = class CastError extends Error {
   constructor(message) {
     super(message);
-    this.name = 'NotFoundError';
+    this.name = 'CastError';
     this.statusCode = 404;
   }
 
   logError() {
     writeDataToLogFile(message);
   }
-}
+};
 
 // 500
 module.exports = class InternalServerError extends Error {
@@ -45,7 +47,7 @@ module.exports = class InternalServerError extends Error {
   logError() {
     writeDataToLogFile(message);
   }
-}
+};
 
 // err from global uncaught Exception
 module.exports = class UnknownError extends Error {
@@ -58,5 +60,4 @@ module.exports = class UnknownError extends Error {
   logError() {
     writeDataToLogFile(message);
   }
-}
-
+};
