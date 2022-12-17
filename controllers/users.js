@@ -1,23 +1,34 @@
 const User = require('../models/user');
+const defineError = require('../utils/ErrorHandler');
+const errorAnswers = require('../utils/constants').errorAnswers;
+let error;
 
 module.exports.getAllUsers = (req, res) => {
   User.find({})
     .then((users) => res.send({ data: users }))
-    .catch((err) => res.status(500).send({ message: `Ошибка. Невозможно получить пользователей. ${err.name} : ${err.message}` }));
+    .catch((err) => {
+      error = defineError(err, errorAnswers.gettingUsersError)
+      res.status(error.statusCode).send({ message: `Ошибка ${error.statusCode}. ${errorAnswers.gettingUsersError}` });
+    });
 };
 
 module.exports.getUserById = (req, res) => {
   const userId = req.params.userId;
   User.findById(userId)
     .then((user) => res.send({ data: user }))
-    .catch((err) => res.status(500).send({ message: `Ошибка. Пользователь не найден по id. ${err.name} : ${err.message}` }));
-};
+    .catch((err) => {
+      error = defineError(err, errorAnswers.userIdError);
+      res.status(error.statusCode).send({ message: `Ошибка ${error.statusCode}. ${errorAnswers.userIdError}` });
+})};
 
 module.exports.createUser = (req, res) => {
   const { name, about, avatar } = req.body;
   User.create({ name, about, avatar })
     .then((user) => res.send({ data: user }))
-    .catch((err) => res.status(500).send({ message: `Ошибка. Пользователь не создан. ${err.name} : ${err.message}` }));
+    .catch((err) => {
+      error = defineError(err, errorAnswers.creationUserError);
+      res.status(error.statusCode).send({ message: `Ошибка ${error.statusCode}. ${errorAnswers.creationUserError}` });
+    });
 };
 
 module.exports.updateProfile = (req, res) => {
@@ -33,7 +44,10 @@ module.exports.updateProfile = (req, res) => {
     }
   )
     .then((user) => res.send({ user: user }))
-    .catch((err) => res.status(500).send({ message: `Ошибка. Пользователь не обновлен. ${err.name} : ${err.message}` }));
+    .catch((err) => {
+      error = defineError(err, errorAnswers.updatingUserError);
+      res.status(error.statusCode).send({ message: `Ошибка ${error.statusCode}. ${ errorAnswers.updatingUserError}` });
+    });
 };
 
 module.exports.updateAvatar = (req, res) => {
@@ -49,5 +63,8 @@ module.exports.updateAvatar = (req, res) => {
     }
   )
     .then((user) => res.send({ user: user }))
-    .catch((err) => res.status(500).send({ message: `Ошибка. Аватар не обновлен. ${err.name} : ${err.message}` }));
+    .catch((err) => {
+      error = defineError(err, errorAnswers.updatingAvatarError);
+      res.status(error.statusCode).send({ message: `Ошибка ${error.statusCode}. ${ errorAnswers.updatingAvatarError}` });
+    });
 };

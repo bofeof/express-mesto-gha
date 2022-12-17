@@ -1,4 +1,5 @@
 const Card = require('../models/card');
+const {ValidationError, CastError, InternalServerError, UnknownError} = require('../utils/ErrorHandler')
 
 module.exports.getAllCards = (req, res) => {
   Card.find({})

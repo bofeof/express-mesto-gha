@@ -1,30 +1,56 @@
 const fs = require('fs');
-const path = require('path');
-const logFile = path.join(__dirname, '/logs/serverLogs.log');
+const logFile = require('../utils/constants').logFile
 
-function writeDataToLogFile(message) {
-  const log = `${new Date()}: ${message}`;
-  fs.writeFile(filepath, log, { encoding: 'utf8' }, (err) => {
+/** write err data to logs/Log.log */
+function writeDataToLogFile(statusCode, message) {
+  const logData = `${new Date()}: ${statusCode}. ${message} \n`;
+  fs.appendFile(logFile, logData, { encoding: 'utf8' }, (err) => {
     if (err) {
       console.log(err);
     }
   });
 }
 
-// 400
-module.exports = class ValidationError extends Error {
+/** define kind of err from request */
+module.exports = function defineError(err, message) {
+  //400
+  if (err.name === 'ValidationError') {
+    console.log(400);
+    error = new ValidationError(`Ошибка. ${message}. ${err.name} : ${err.message}`);
+    error.logError();
+    return error;
+  }
+
+  //404
+  if (err.name === 'CastError') {
+    console.log(404);
+    error = new CastError(`Ошибка. ${message}. ${err.name} : ${err.message}`);
+    error.logError();
+    return error;
+  }
+
+  //500
+  console.log(500);
+  error = new InternalServerError(`Ошибка. ${message}. ${err.name} : ${err.message}`);
+  error.logError();
+  return error;
+};
+
+/** Errors */
+/** 400 */
+class ValidationError extends Error {
   constructor(message) {
     super(message);
     this.name = 'ValidationError';
     this.statusCode = 400;
   }
   logError() {
-    writeDataToLogFile(message);
+    writeDataToLogFile(this.statusCode, this.message);
   }
-};
+}
 
-// 404
-module.exports = class CastError extends Error {
+/** 404 */
+class CastError extends Error {
   constructor(message) {
     super(message);
     this.name = 'CastError';
@@ -32,12 +58,12 @@ module.exports = class CastError extends Error {
   }
 
   logError() {
-    writeDataToLogFile(message);
+    writeDataToLogFile(this.statusCode, this.message);
   }
-};
+}
 
-// 500
-module.exports = class InternalServerError extends Error {
+/** 500 */
+class InternalServerError extends Error {
   constructor(message) {
     super(message);
     this.name = 'InternalServerError';
@@ -45,12 +71,12 @@ module.exports = class InternalServerError extends Error {
   }
 
   logError() {
-    writeDataToLogFile(message);
+    writeDataToLogFile(this.statusCode, this.message);
   }
-};
+}
 
-// err from global uncaught Exception
-module.exports = class UnknownError extends Error {
+/** err from global uncaught Exception -  ? */
+class UnknownError extends Error {
   constructor(message) {
     super(message);
     this.name = 'UnknownError';
@@ -58,6 +84,6 @@ module.exports = class UnknownError extends Error {
   }
 
   logError() {
-    writeDataToLogFile(message);
+    writeDataToLogFile(this.statusCode, this.message);
   }
-};
+}

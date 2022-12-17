@@ -10,15 +10,15 @@ const app = express();
 const userRouter = require('./routes/users');
 const cardRouter = require('./routes/cards');
 
-const UnknownError = require('./utils/ErrorHandler');
+// const UnknownError = require('./utils/ErrorHandler');
 
 const prepareLogFile = require('./utils/prepareLogFile');
 
 prepareLogFile();
 
-process.on('uncaughtException', (err, origin) => {
-  throw new UnknownError(`${origin} ${err.name} c текстом ${err.message} не была обработана. Обратите внимание!`)
-});
+// process.on('uncaughtException', (err, origin) => {
+//   throw new UnknownError(`${origin} ${err.name} c текстом ${err.message} не была обработана. Обратите внимание!`)
+// });
 
 mongoose.connect('mongodb://localhost:27017/mestodb');
 
@@ -26,7 +26,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 
-// tmp middleware create user obj for _id extraction '639afb28eabb08c97257828c'
+// tmp middleware create user obj for _id extraction, current user id -'639afb28eabb08c97257828c'
 app.use((req, res, next) => {
   req.user = {
     _id: '639afb28eabb08c97257828c',
