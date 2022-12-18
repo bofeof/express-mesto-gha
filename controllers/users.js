@@ -1,9 +1,9 @@
 const User = require('../models/user');
-const defineError = require('../utils/ErrorHandler');
-const errorAnswers = require('../utils/constants').errorAnswers;
+const defineError = require('../utils/errorHandler/ErrorHandler');
+const { errorAnswers } = require('../utils/constants');
 
-const ValidationError = require('../utils/ErrorHandler').ValidationError;
-const CastError = require('../utils/ErrorHandler').CastError;
+const { ValidationError } = require('../utils/errorHandler/ValidationError');
+const { CastError } = require('../utils/errorHandler/CastError');
 
 let error;
 
@@ -17,7 +17,7 @@ module.exports.getAllUsers = (req, res) => {
 };
 
 module.exports.getUserById = (req, res) => {
-  const userId = req.params.userId;
+  const { userId } = req.params;
 
   User.findById(userId)
     .then((user) => {
@@ -62,9 +62,9 @@ module.exports.updateProfile = (req, res) => {
       new: true,
       runValidators: true,
       upsert: true,
-    }
+    },
   )
-    .then((user) => res.send({ user: user }))
+    .then((data) => res.send({ user: data }))
     .catch((err) => {
       // incorrect id
       if (userId.length < 24) {
@@ -87,9 +87,9 @@ module.exports.updateAvatar = (req, res) => {
       new: true,
       runValidators: true,
       upsert: true,
-    }
+    },
   )
-    .then((user) => res.send({ user: user }))
+    .then((data) => res.send({ user: data }))
     .catch((err) => {
       // incorrect id
       if (userId.length < 24) {

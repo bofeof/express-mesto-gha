@@ -1,10 +1,11 @@
-/** prepare/create log folder and file for server message */
+/** prepare log folder and file for server message */
 const fs = require('fs');
 
-module.exports = prepareLogFile = () => {
+function prepareLogFile() {
   if (!fs.existsSync('logs')) {
     fs.mkdir('logs', (err) => {
       if (err !== null) {
+        // eslint-disable-next-line no-console
         console.log(err);
       }
     });
@@ -12,8 +13,11 @@ module.exports = prepareLogFile = () => {
   if (!fs.existsSync('logs/Logs.log')) {
     fs.writeFile('logs/Logs.log', '', (err) => {
       if (err !== null) {
+        // eslint-disable-next-line no-console
         console.log(err);
       }
     });
   }
-};
+}
+
+module.exports.prepareLogFile = prepareLogFile;

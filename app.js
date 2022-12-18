@@ -10,10 +10,9 @@ const app = express();
 const userRouter = require('./routes/users');
 const cardRouter = require('./routes/cards');
 
-const { UnknownError } = require('./utils/ErrorHandler');
-const { WrongRouteError } = require('./utils/ErrorHandler');
-
-const prepareLogFile = require('./utils/prepareLogFile');
+const { UnknownError } = require('./utils/errorHandler/UnknownError');
+const { WrongRouteError } = require('./utils/errorHandler/WrongRouteError');
+const { prepareLogFile } = require('./utils/logPreparation/prepareLogFile');
 
 prepareLogFile();
 

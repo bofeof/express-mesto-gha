@@ -1,8 +1,8 @@
 const Card = require('../models/card');
-const defineError = require('../utils/ErrorHandler');
+const defineError = require('../utils/errorHandler/ErrorHandler');
 const { errorAnswers } = require('../utils/constants');
-const { ValidationError } = require('../utils/ErrorHandler');
-const { CastError } = require('../utils/ErrorHandler');
+const { ValidationError } = require('../utils/errorHandler/ValidationError');
+const { CastError } = require('../utils/errorHandler/CastError');
 
 let error;
 

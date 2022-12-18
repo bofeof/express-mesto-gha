@@ -1,4 +1,4 @@
-module.exports.errorAnswers = errorAnswers = {
+const errorAnswers = {
   gettingCardsError: 'Невозможно получить карточки',
   gettingUsersError: 'Невозможно получить пользователей',
   userIdError: 'Невозможно найти пользователя по id. Не существует в базе',
@@ -10,7 +10,9 @@ module.exports.errorAnswers = errorAnswers = {
   removingCardError: 'Невозможно удалить карточку. Задан неверный id карточки, карточка не существует в базе',
   settingLikeError: 'Невозможно поставить лайк карточке. Переданы некорректные данные, либо задан неверный id карточки',
   removingLikeError: 'Невозможно снять лайк с карточки. Переданы некорректные данные, либо задан неверный id карточки',
-  invalidIdError: 'Заданный id параметр в запросе некорректный'
+  invalidIdError: 'Заданный id параметр в запросе некорректный',
 };
+const logFile = 'logs/Logs.log';
 
-module.exports.logFile = logFile ='logs/Logs.log';
+module.exports.errorAnswers = errorAnswers;
+module.exports.logFile = logFile;
