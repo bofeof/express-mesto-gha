@@ -32,7 +32,8 @@ module.exports.deleteCardbyId = (req, res) => {
   Card.findByIdAndRemove(cardId, (err, removingCard) => {
     // if card doesnt exist
     if (!removingCard) {
-      const err = { name: 'ValidationError', message: `Card with special id - ${cardId} does not exist` };
+      console.log(removingCard)
+      const err = { name: 'CastError', message: `Card with special id - ${cardId} does not exist` };
       error = defineError(err, errorAnswers.removingCardError);
       res.status(error.statusCode).send({ message: `Ошибка ${error.statusCode}. ${errorAnswers.removingCardError}` });
       return;
