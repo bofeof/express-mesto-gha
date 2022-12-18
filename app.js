@@ -17,12 +17,10 @@ const prepareLogFile = require('./utils/prepareLogFile');
 
 prepareLogFile();
 
-
 process.on('uncaughtException', (err, origin) => {
-  console.log('unexp route')
   const error = new UnknownError(`${origin} ${err.name} c текстом ${err.message} не была обработана. Обратите внимание!`);
   error.logError();
-  console.log(`Непредвиденная ошибка! ${err.message}`);
+  console.error(`Непредвиденная ошибка! ${err.message}`);
 });
 
 mongoose.connect('mongodb://localhost:27017/mestodb');
@@ -45,7 +43,7 @@ app.use((req, res, next) => {
   const error = new WrongRouteError(`Ошибка роутинга. Некорректный url адрес, запрос`);
   error.logError();
   res.status(error.statusCode).send({ message: `Ошибка ${error.statusCode}. Некорректный url адрес, запрос` });
-next()
+  next();
 });
 
 app.listen(PORT, () => {

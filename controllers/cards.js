@@ -1,6 +1,8 @@
 const Card = require('../models/card');
 const defineError = require('../utils/ErrorHandler');
 const errorAnswers = require('../utils/constants').errorAnswers;
+const ValidationError = require('../utils/ErrorHandler').ValidationError;
+const CastError = require('../utils/ErrorHandler').CastError;
 let error;
 
 module.exports.getAllCards = (req, res) => {
@@ -56,7 +58,17 @@ module.exports.likeCard = (req, res) => {
   const userId = req.user._id;
   Card.findByIdAndUpdate(cardId, { $addToSet: { likes: userId } }, { new: true })
     .populate(['owner', 'likes'])
-    .then((card) => res.send({ card: card }))
+    .then((card) => {
+      // correct id but doesnt exist in bd
+      if (!card) {
+        const err = { name: 'CastError', message: `Card with special id - ${cardId} does not exist` };
+        error = new CastError(err, errorAnswers.cardIdError);
+        res.status(error.statusCode).send({ message: `Ошибка ${error.statusCode}. ${errorAnswers.cardIdError}` });
+        return;
+      }
+
+      res.send({ card: card });
+    })
     .catch((err) => {
       if (cardId.length < 24 || userId.length < 24) {
         error = new ValidationError(err, errorAnswers.invalidIdError);
@@ -74,7 +86,16 @@ module.exports.dislikeCard = (req, res) => {
   const userId = req.user._id;
   Card.findByIdAndUpdate(cardId, { $pull: { likes: userId } }, { new: true })
     .populate(['owner', 'likes'])
-    .then((card) => res.send({ card: card }))
+    .then((card) => {
+      // correct id but doesnt exist in bd
+      if (!card) {
+        const err = { name: 'CastError', message: `Card with special id - ${cardId} does not exist` };
+        error = new CastError(err, errorAnswers.cardIdError);
+        res.status(error.statusCode).send({ message: `Ошибка ${error.statusCode}. ${errorAnswers.cardIdError}` });
+        return;
+      }
+      res.send({ card: card })
+    })
     .catch((err) => {
       if (cardId.length < 24 || userId.length < 24) {
         error = new ValidationError(err, errorAnswers.invalidIdError);
