@@ -31,7 +31,7 @@ module.exports.getUserById = (req, res) => {
       res.send({ data: user });
     })
     .catch((err) => {
-      // incocrrecr id
+      // incorrect id
       if (userId.length < 24) {
         error = new ValidationError(err, errorAnswers.invalidIdError);
         res.status(error.statusCode).send({ message: `Ошибка ${error.statusCode}. ${errorAnswers.invalidIdError}` });
@@ -66,6 +66,7 @@ module.exports.updateProfile = (req, res) => {
   )
     .then((user) => res.send({ user: user }))
     .catch((err) => {
+      // incorrect id
       if (userId.length < 24) {
         error = new ValidationError(err, errorAnswers.invalidIdError);
         res.status(error.statusCode).send({ message: `Ошибка ${error.statusCode}. ${errorAnswers.invalidIdError}` });
@@ -90,6 +91,7 @@ module.exports.updateAvatar = (req, res) => {
   )
     .then((user) => res.send({ user: user }))
     .catch((err) => {
+      // incorrect id
       if (userId.length < 24) {
         error = new ValidationError(err, errorAnswers.invalidIdError);
         res.status(error.statusCode).send({ message: `Ошибка ${error.statusCode}. ${errorAnswers.invalidIdError}` });

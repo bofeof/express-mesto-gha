@@ -32,13 +32,14 @@ module.exports.deleteCardbyId = (req, res) => {
   Card.findByIdAndRemove(cardId, (err, removingCard) => {
     // if card doesnt exist
     if (!removingCard) {
-      const err = { name: 'CastError', message: `Card with special id - ${cardId} does not exist` };
+      const err = { name: 'ValidationError', message: `Card with special id - ${cardId} does not exist` };
       error = defineError(err, errorAnswers.removingCardError);
       res.status(error.statusCode).send({ message: `Ошибка ${error.statusCode}. ${errorAnswers.removingCardError}` });
       return;
     }
 
     if (err) {
+      // incorrect id
       if (cardId.length < 24) {
         error = new ValidationError(err, errorAnswers.invalidIdError);
         res.status(error.statusCode).send({ message: `Ошибка ${error.statusCode}. ${errorAnswers.invalidIdError}` });
@@ -48,7 +49,6 @@ module.exports.deleteCardbyId = (req, res) => {
       res.status(error.statusCode).send({ message: `Ошибка ${error.statusCode}. ${errorAnswers.removingCardError}` });
       return;
     }
-
     res.send({ card: removingCard });
   }).populate(['owner', 'likes']);
 };
@@ -70,12 +70,12 @@ module.exports.likeCard = (req, res) => {
       res.send({ card: card });
     })
     .catch((err) => {
+      // incorrect ids
       if (cardId.length < 24 || userId.length < 24) {
         error = new ValidationError(err, errorAnswers.invalidIdError);
         res.status(error.statusCode).send({ message: `Ошибка ${error.statusCode}. ${errorAnswers.invalidIdError}` });
         return;
       }
-
       error = defineError(err, errorAnswers.settingLikeError);
       res.status(error.statusCode).send({ message: `Ошибка ${error.statusCode}. ${errorAnswers.settingLikeError}` });
     });
@@ -94,9 +94,10 @@ module.exports.dislikeCard = (req, res) => {
         res.status(error.statusCode).send({ message: `Ошибка ${error.statusCode}. ${errorAnswers.cardIdError}` });
         return;
       }
-      res.send({ card: card })
+      res.send({ card: card });
     })
     .catch((err) => {
+      // incorrect ids
       if (cardId.length < 24 || userId.length < 24) {
         error = new ValidationError(err, errorAnswers.invalidIdError);
         res.status(error.statusCode).send({ message: `Ошибка ${error.statusCode}. ${errorAnswers.invalidIdError}` });
