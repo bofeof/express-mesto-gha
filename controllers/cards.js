@@ -1,14 +1,15 @@
 const Card = require('../models/card');
 const defineError = require('../utils/ErrorHandler');
-const errorAnswers = require('../utils/constants').errorAnswers;
-const ValidationError = require('../utils/ErrorHandler').ValidationError;
-const CastError = require('../utils/ErrorHandler').CastError;
+const { errorAnswers } = require('../utils/constants');
+const { ValidationError } = require('../utils/ErrorHandler');
+const { CastError } = require('../utils/ErrorHandler');
+
 let error;
 
 module.exports.getAllCards = (req, res) => {
   Card.find({})
     .populate(['owner', 'likes'])
-    .then((cards) => res.send({ cards: cards }))
+    .then((data) => res.send({ cards: data }))
     .catch((err) => {
       error = defineError(err, errorAnswers.gettingCardsError);
       res.status(error.statusCode).send({ message: `Ошибка ${error.statusCode}. ${errorAnswers.gettingCardsError}` });
@@ -19,7 +20,7 @@ module.exports.createCard = (req, res) => {
   const owner = req.user._id;
   const { name, link } = req.body;
   Card.create({ name, link, owner })
-    .then((card) => res.send({ card: card }))
+    .then((data) => res.send({ card: data }))
     .catch((err) => {
       error = defineError(err, errorAnswers.creationCardError);
       res.status(error.statusCode).send({ message: `Ошибка ${error.statusCode}. ${errorAnswers.creationCardError}` });
@@ -27,20 +28,21 @@ module.exports.createCard = (req, res) => {
 };
 
 module.exports.deleteCardbyId = (req, res) => {
-  const cardId = req.params.cardId;
+  const { cardId } = req.params;
 
   Card.findByIdAndRemove(cardId, (err, removingCard) => {
     // incorrect id
+    let customErr;
     if (cardId.length < 24) {
-      const err = { name: 'ValidationError', message: `Card with special id - ${cardId} does not exist` };
-      error = defineError(err, errorAnswers.invalidIdError);
+      customErr = { name: 'ValidationError', message: `Card with special id - ${cardId} does not exist` };
+      error = defineError(customErr, errorAnswers.invalidIdError);
       res.status(error.statusCode).send({ message: `Ошибка ${error.statusCode}. ${errorAnswers.invalidIdError}` });
       return;
     }
     // if card doesnt exist
     if (!removingCard) {
-      const err = { name: 'CastError', message: `Card with special id - ${cardId} does not exist` };
-      error = defineError(err, errorAnswers.removingCardError);
+      customErr = { name: 'CastError', message: `Card with special id - ${cardId} does not exist` };
+      error = defineError(customErr, errorAnswers.removingCardError);
       res.status(error.statusCode).send({ message: `Ошибка ${error.statusCode}. ${errorAnswers.removingCardError}` });
       return;
     }
@@ -54,19 +56,19 @@ module.exports.deleteCardbyId = (req, res) => {
 };
 
 module.exports.likeCard = (req, res) => {
-  const cardId = req.params.cardId;
+  const { cardId } = req.params;
   const userId = req.user._id;
   Card.findByIdAndUpdate(cardId, { $addToSet: { likes: userId } }, { new: true })
     .populate(['owner', 'likes'])
-    .then((card) => {
+    .then((data) => {
       // correct id but doesnt exist in bd
-      if (!card) {
+      if (!data) {
         const err = { name: 'CastError', message: `Card with special id - ${cardId} does not exist` };
         error = new CastError(err, errorAnswers.cardIdError);
         res.status(error.statusCode).send({ message: `Ошибка ${error.statusCode}. ${errorAnswers.cardIdError}` });
         return;
       }
-      res.send({ card: card });
+      res.send({ card: data });
     })
     .catch((err) => {
       // incorrect ids
@@ -81,19 +83,19 @@ module.exports.likeCard = (req, res) => {
 };
 
 module.exports.dislikeCard = (req, res) => {
-  const cardId = req.params.cardId;
+  const { cardId } = req.params;
   const userId = req.user._id;
   Card.findByIdAndUpdate(cardId, { $pull: { likes: userId } }, { new: true })
     .populate(['owner', 'likes'])
-    .then((card) => {
+    .then((data) => {
       // correct id but doesnt exist in bd
-      if (!card) {
+      if (!data) {
         const err = { name: 'CastError', message: `Card with special id - ${cardId} does not exist` };
         error = new CastError(err, errorAnswers.cardIdError);
         res.status(error.statusCode).send({ message: `Ошибка ${error.statusCode}. ${errorAnswers.cardIdError}` });
         return;
       }
-      res.send({ card: card });
+      res.send({ card: data });
     })
     .catch((err) => {
       // incorrect ids

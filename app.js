@@ -10,8 +10,8 @@ const app = express();
 const userRouter = require('./routes/users');
 const cardRouter = require('./routes/cards');
 
-const UnknownError = require('./utils/ErrorHandler').UnknownError;
-const WrongRouteError = require('./utils/ErrorHandler').WrongRouteError;
+const { UnknownError } = require('./utils/ErrorHandler');
+const { WrongRouteError } = require('./utils/ErrorHandler');
 
 const prepareLogFile = require('./utils/prepareLogFile');
 
@@ -20,7 +20,7 @@ prepareLogFile();
 process.on('uncaughtException', (err, origin) => {
   const error = new UnknownError(`${origin} ${err.name} c текстом ${err.message} не была обработана. Обратите внимание!`);
   error.logError();
-  console.error(`Непредвиденная ошибка! ${err.message}`);
+  console.log(`Непредвиденная ошибка! ${err.message}`);
 });
 
 mongoose.connect('mongodb://localhost:27017/mestodb');
@@ -40,7 +40,7 @@ app.use((req, res, next) => {
 app.use('/users', userRouter);
 app.use('/cards', cardRouter);
 app.use((req, res, next) => {
-  const error = new WrongRouteError(`Ошибка роутинга. Некорректный url адрес, запрос`);
+  const error = new WrongRouteError('Ошибка роутинга. Некорректный url адрес, запрос');
   error.logError();
   res.status(error.statusCode).send({ message: `Ошибка ${error.statusCode}. Некорректный url адрес, запрос` });
   next();
