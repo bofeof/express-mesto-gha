@@ -30,22 +30,21 @@ module.exports.deleteCardbyId = (req, res) => {
   const cardId = req.params.cardId;
 
   Card.findByIdAndRemove(cardId, (err, removingCard) => {
+    // incorrect id
+    if (cardId.length < 24) {
+      const err = { name: 'ValidationError', message: `Card with special id - ${cardId} does not exist` };
+      error = defineError(err, errorAnswers.invalidIdError);
+      res.status(error.statusCode).send({ message: `Ошибка ${error.statusCode}. ${errorAnswers.invalidIdError}` });
+      return;
+    }
     // if card doesnt exist
     if (!removingCard) {
-      console.log(removingCard)
       const err = { name: 'CastError', message: `Card with special id - ${cardId} does not exist` };
       error = defineError(err, errorAnswers.removingCardError);
       res.status(error.statusCode).send({ message: `Ошибка ${error.statusCode}. ${errorAnswers.removingCardError}` });
       return;
     }
-
     if (err) {
-      // incorrect id
-      if (cardId.length < 24) {
-        error = new ValidationError(err, errorAnswers.invalidIdError);
-        res.status(error.statusCode).send({ message: `Ошибка ${error.statusCode}. ${errorAnswers.invalidIdError}` });
-        return;
-      }
       error = defineError(err, errorAnswers.removingCardError);
       res.status(error.statusCode).send({ message: `Ошибка ${error.statusCode}. ${errorAnswers.removingCardError}` });
       return;
@@ -67,7 +66,6 @@ module.exports.likeCard = (req, res) => {
         res.status(error.statusCode).send({ message: `Ошибка ${error.statusCode}. ${errorAnswers.cardIdError}` });
         return;
       }
-
       res.send({ card: card });
     })
     .catch((err) => {
