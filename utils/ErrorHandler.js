@@ -72,7 +72,7 @@ class InternalServerError extends Error {
   }
 }
 
-/** err from global uncaught Exception -  ? */
+/** err from global uncaught Exception */
 class UnknownError extends Error {
   constructor(message) {
     super(message);
@@ -81,6 +81,26 @@ class UnknownError extends Error {
   }
 
   logError() {
+    console.log(this.statusCode)
     writeDataToLogFile(this.statusCode, this.message);
   }
 }
+
+class WrongRouteError extends Error {
+  constructor(message) {
+    super(message);
+    this.name = 'WrongRouteError';
+    this.statusCode = 404;
+
+  }
+
+  logError() {
+    writeDataToLogFile(this.statusCode, this.message);
+  }
+}
+
+module.exports.ValidationError = ValidationError;
+module.exports.CastError = CastError;
+module.exports.InternalServerError = InternalServerError;
+module.exports.UnknownError = UnknownError;
+module.exports.WrongRouteError = WrongRouteError;

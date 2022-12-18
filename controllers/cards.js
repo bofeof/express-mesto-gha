@@ -27,15 +27,28 @@ module.exports.createCard = (req, res) => {
 module.exports.deleteCardbyId = (req, res) => {
   const cardId = req.params.cardId;
 
-  Card.findByIdAndRemove(cardId, (err, removingCard)=>{
-    if(err){
+  Card.findByIdAndRemove(cardId, (err, removingCard) => {
+    // if card doesnt exist
+    if (!removingCard) {
+      const err = { name: 'CastError', message: `Card with special id - ${cardId} does not exist` };
       error = defineError(err, errorAnswers.removingCardError);
       res.status(error.statusCode).send({ message: `Ошибка ${error.statusCode}. ${errorAnswers.removingCardError}` });
-      return
+      return;
     }
-    res.send({ card: removingCard })
-  })
-    .populate(['owner', 'likes'])
+
+    if (err) {
+      if (cardId.length < 24) {
+        error = new ValidationError(err, errorAnswers.invalidIdError);
+        res.status(error.statusCode).send({ message: `Ошибка ${error.statusCode}. ${errorAnswers.invalidIdError}` });
+        return;
+      }
+      error = defineError(err, errorAnswers.removingCardError);
+      res.status(error.statusCode).send({ message: `Ошибка ${error.statusCode}. ${errorAnswers.removingCardError}` });
+      return;
+    }
+
+    res.send({ card: removingCard });
+  }).populate(['owner', 'likes']);
 };
 
 module.exports.likeCard = (req, res) => {
@@ -45,6 +58,12 @@ module.exports.likeCard = (req, res) => {
     .populate(['owner', 'likes'])
     .then((card) => res.send({ card: card }))
     .catch((err) => {
+      if (cardId.length < 24 || userId.length < 24) {
+        error = new ValidationError(err, errorAnswers.invalidIdError);
+        res.status(error.statusCode).send({ message: `Ошибка ${error.statusCode}. ${errorAnswers.invalidIdError}` });
+        return;
+      }
+
       error = defineError(err, errorAnswers.settingLikeError);
       res.status(error.statusCode).send({ message: `Ошибка ${error.statusCode}. ${errorAnswers.settingLikeError}` });
     });
@@ -57,6 +76,11 @@ module.exports.dislikeCard = (req, res) => {
     .populate(['owner', 'likes'])
     .then((card) => res.send({ card: card }))
     .catch((err) => {
+      if (cardId.length < 24 || userId.length < 24) {
+        error = new ValidationError(err, errorAnswers.invalidIdError);
+        res.status(error.statusCode).send({ message: `Ошибка ${error.statusCode}. ${errorAnswers.invalidIdError}` });
+        return;
+      }
       error = defineError(err, errorAnswers.removingLikeError);
       res.status(error.statusCode).send({ message: `Ошибка ${error.statusCode}. ${errorAnswers.removingLikeError}` });
     });

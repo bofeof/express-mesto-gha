@@ -1,6 +1,10 @@
 const User = require('../models/user');
 const defineError = require('../utils/ErrorHandler');
 const errorAnswers = require('../utils/constants').errorAnswers;
+
+// for invalid id
+const ValidationError = require('../utils/ErrorHandler').ValidationError;
+
 let error;
 
 module.exports.getAllUsers = (req, res) => {
@@ -17,6 +21,11 @@ module.exports.getUserById = (req, res) => {
   User.findById(userId)
     .then((user) => res.send({ data: user }))
     .catch((err) => {
+      if (userId.length < 24){
+        error = new ValidationError(err, errorAnswers.invalidIdError)
+        res.status(error.statusCode).send({ message: `Ошибка ${error.statusCode}. ${errorAnswers.invalidIdError}` });
+        return
+      }
       error = defineError(err, errorAnswers.userIdError);
       res.status(error.statusCode).send({ message: `Ошибка ${error.statusCode}. ${errorAnswers.userIdError}` });
 })};
@@ -45,6 +54,11 @@ module.exports.updateProfile = (req, res) => {
   )
     .then((user) => res.send({ user: user }))
     .catch((err) => {
+      if (userId.length < 24){
+        error = new ValidationError(err, errorAnswers.invalidIdError)
+        res.status(error.statusCode).send({ message: `Ошибка ${error.statusCode}. ${errorAnswers.invalidIdError}` });
+        return
+      }
       error = defineError(err, errorAnswers.updatingUserError);
       res.status(error.statusCode).send({ message: `Ошибка ${error.statusCode}. ${ errorAnswers.updatingUserError}` });
     });
@@ -64,6 +78,11 @@ module.exports.updateAvatar = (req, res) => {
   )
     .then((user) => res.send({ user: user }))
     .catch((err) => {
+      if (userId.length < 24){
+        error = new ValidationError(err, errorAnswers.invalidIdError)
+        res.status(error.statusCode).send({ message: `Ошибка ${error.statusCode}. ${errorAnswers.invalidIdError}` });
+        return
+      }
       error = defineError(err, errorAnswers.updatingAvatarError);
       res.status(error.statusCode).send({ message: `Ошибка ${error.statusCode}. ${ errorAnswers.updatingAvatarError}` });
     });
