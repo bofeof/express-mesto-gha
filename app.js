@@ -25,7 +25,9 @@ const limiter = rateLimit({
 prepareLogFile();
 
 process.on('uncaughtException', (err, origin) => {
-  const error = new UnknownError(`${origin} ${err.name} c текстом ${err.message} не была обработана. Обратите внимание!`);
+  const error = new UnknownError(
+    `${origin} ${err.name} c текстом ${err.message} не была обработана. Обратите внимание!`,
+  );
   error.logError();
   // eslint-disable-next-line no-console
   console.log(`Непредвиденная ошибка! ${err.message}`);
