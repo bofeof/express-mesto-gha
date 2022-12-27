@@ -17,7 +17,7 @@ const { prepareLogFile } = require('./utils/logPreparation/prepareLogFile');
 
 const limiter = rateLimit({
   windowMs: 5 * 60 * 1000, // 5 minutes
-  max: 50, // 50 reqs per 5 min
+  max: 200, // 200 reqs per 5 min
   standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
   legacyHeaders: false, // Disable the `X-RateLimit-*` headers
 });

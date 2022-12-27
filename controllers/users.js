@@ -1,7 +1,9 @@
 const User = require('../models/user');
 const defineError = require('../utils/errorHandler/ErrorHandler');
 const { errorAnswers } = require('../utils/constants');
-const { validateUserId } = require('../utils/errorHandler/validationId/validateUserId');
+
+const { ValidationError } = require('../utils/errorHandler/ValidationError');
+const { CastError } = require('../utils/errorHandler/CastError');
 
 let error;
 
@@ -21,18 +23,17 @@ module.exports.getUserById = (req, res) => {
     .then((user) => {
       // correct id but doesnt exist in bd
       if (!user) {
-        const customErr = validateUserId(userId);
-        error = defineError(customErr, errorAnswers.userIdError);
-        res.status(error.statusCode).send({ message: `Ошибка ${error.statusCode}. ${errorAnswers.invalidIdError}` });
+        const err = { name: 'CastError', message: `Card with special id - ${userId} does not exist` };
+        error = new CastError(err, errorAnswers.userIdError);
+        res.status(error.statusCode).send({ message: `Ошибка ${error.statusCode}. ${errorAnswers.userIdError}` });
         return;
       }
       res.send({ data: user });
     })
     .catch((err) => {
       // incorrect id
-      const customErr = validateUserId(userId);
-      if (customErr) {
-        error = defineError(customErr, errorAnswers.userIdError);
+      if (userId.length < 24) {
+        error = new ValidationError(err, errorAnswers.invalidIdError);
         res.status(error.statusCode).send({ message: `Ошибка ${error.statusCode}. ${errorAnswers.invalidIdError}` });
         return;
       }
@@ -42,8 +43,20 @@ module.exports.getUserById = (req, res) => {
 };
 
 module.exports.createUser = (req, res) => {
-  const { name, about, avatar } = req.body;
-  User.create({ name, about, avatar })
+  const {
+    name,
+    about,
+    avatar,
+    email,
+    password,
+  } = req.body;
+  User.create({
+    name,
+    about,
+    avatar,
+    email,
+    password,
+  })
     .then((user) => res.send({ data: user }))
     .catch((err) => {
       error = defineError(err, errorAnswers.creationUserError);
@@ -63,11 +76,14 @@ module.exports.updateProfile = (req, res) => {
       upsert: false,
     },
   )
-    .then((data) => {
-      res.send({ user: data });
-    })
-
+    .then((data) => res.send({ user: data }))
     .catch((err) => {
+      // incorrect id
+      if (userId.length < 24) {
+        error = new ValidationError(err, errorAnswers.invalidIdError);
+        res.status(error.statusCode).send({ message: `Ошибка ${error.statusCode}. ${errorAnswers.invalidIdError}` });
+        return;
+      }
       error = defineError(err, errorAnswers.updatingUserError);
       res.status(error.statusCode).send({ message: `Ошибка ${error.statusCode}. ${errorAnswers.updatingUserError}` });
     });
@@ -87,6 +103,12 @@ module.exports.updateAvatar = (req, res) => {
   )
     .then((data) => res.send({ user: data }))
     .catch((err) => {
+      // incorrect id
+      if (userId.length < 24) {
+        error = new ValidationError(err, errorAnswers.invalidIdError);
+        res.status(error.statusCode).send({ message: `Ошибка ${error.statusCode}. ${errorAnswers.invalidIdError}` });
+        return;
+      }
       error = defineError(err, errorAnswers.updatingAvatarError);
       res.status(error.statusCode).send({ message: `Ошибка ${error.statusCode}. ${errorAnswers.updatingAvatarError}` });
     });
