@@ -1,3 +1,4 @@
+const bcrypt = require('bcryptjs');
 const User = require('../models/user');
 const defineError = require('../utils/errorHandler/ErrorHandler');
 const { errorAnswers } = require('../utils/constants');
@@ -43,25 +44,21 @@ module.exports.getUserById = (req, res) => {
 };
 
 module.exports.createUser = (req, res) => {
-  const {
-    name,
-    about,
-    avatar,
-    email,
-    password,
-  } = req.body;
-  User.create({
-    name,
-    about,
-    avatar,
-    email,
-    password,
-  })
-    .then((user) => res.send({ data: user }))
-    .catch((err) => {
-      error = defineError(err, errorAnswers.creationUserError);
-      res.status(error.statusCode).send({ message: `Ошибка ${error.statusCode}. ${errorAnswers.creationUserError}` });
-    });
+  const { name, about, avatar, email, password } = req.body;
+  bcrypt.hash(password, 10).then((hash) =>
+    User.create({
+      name,
+      about,
+      avatar,
+      email,
+      password: hash,
+    })
+      .then((user) => res.send({ data: user }))
+      .catch((err) => {
+        error = defineError(err, errorAnswers.creationUserError);
+        res.status(error.statusCode).send({ message: `Ошибка ${error.statusCode}. ${errorAnswers.creationUserError}` });
+      })
+  );
 };
 
 module.exports.updateProfile = (req, res) => {
@@ -74,7 +71,7 @@ module.exports.updateProfile = (req, res) => {
       new: true,
       runValidators: true,
       upsert: false,
-    },
+    }
   )
     .then((data) => res.send({ user: data }))
     .catch((err) => {
@@ -99,7 +96,7 @@ module.exports.updateAvatar = (req, res) => {
       new: true,
       runValidators: true,
       upsert: false,
-    },
+    }
   )
     .then((data) => res.send({ user: data }))
     .catch((err) => {
@@ -111,5 +108,20 @@ module.exports.updateAvatar = (req, res) => {
       }
       error = defineError(err, errorAnswers.updatingAvatarError);
       res.status(error.statusCode).send({ message: `Ошибка ${error.statusCode}. ${errorAnswers.updatingAvatarError}` });
+    });
+};
+
+module.exports.login = (req, res) => {
+  const { email, password } = req.body;
+  User.findOne({ email })
+    .then((user) => {
+      if (!user) {
+        return Promise.reject(new Error('Неправильные почта или пароль'));
+      }
+    })
+    // user exists
+
+    .catch((err) => {
+      res.status(401).send({ message: err.message });
     });
 };
