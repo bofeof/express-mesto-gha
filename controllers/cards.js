@@ -17,7 +17,7 @@ module.exports.getAllCards = (req, res) => {
 };
 
 module.exports.createCard = (req, res) => {
-  const owner = req.user._id;
+  const owner = req.cookies._id;
   const { name, link } = req.body;
   Card.create({ name, link, owner })
     .then((data) => res.send({ card: data }))
@@ -29,13 +29,21 @@ module.exports.createCard = (req, res) => {
 
 module.exports.deleteCardbyId = (req, res) => {
   const { cardId } = req.params;
+  const userId = req.cookies._id;
 
   Card.findByIdAndRemove(cardId, (err, removingCard) => {
+
     // check if id from req is incorrect
     if (!removingCard) {
       const customErr = validateCardId(cardId);
       error = defineError(customErr, errorAnswers.invalidIdError);
       res.status(error.statusCode).send({ message: `Ошибка ${error.statusCode}. ${errorAnswers.invalidIdError}` });
+      return;
+    }
+    if (userId !== removingCard.owner._id){
+      const err = { name: 'ForbiddenError', message: `This user doesn't have rights to delete card. Only creator has ability to do it` };
+      error = defineError(err, errorAnswers.forbiddenError);
+      res.status(error.statusCode).send({ message: `Ошибка ${error.statusCode}. ${errorAnswers.forbiddenError}` });
       return;
     }
 
@@ -50,7 +58,7 @@ module.exports.deleteCardbyId = (req, res) => {
 
 module.exports.likeCard = (req, res) => {
   const { cardId } = req.params;
-  const userId = req.user._id;
+  const userId = req.cookies._id;
   Card.findByIdAndUpdate(cardId, { $addToSet: { likes: userId } }, { new: true })
     .populate(['owner', 'likes'])
     .then((data) => {
@@ -78,7 +86,7 @@ module.exports.likeCard = (req, res) => {
 
 module.exports.dislikeCard = (req, res) => {
   const { cardId } = req.params;
-  const userId = req.user._id;
+  const userId = req.cookies._id;
   Card.findByIdAndUpdate(cardId, { $pull: { likes: userId } }, { new: true })
     .populate(['owner', 'likes'])
     .then((data) => {

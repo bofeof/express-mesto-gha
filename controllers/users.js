@@ -1,4 +1,5 @@
-const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const bcrypt = require('bcrypt');
 const User = require('../models/user');
 const defineError = require('../utils/errorHandler/ErrorHandler');
 const { errorAnswers } = require('../utils/constants');
@@ -24,7 +25,7 @@ module.exports.getUserById = (req, res) => {
     .then((user) => {
       // correct id but doesnt exist in bd
       if (!user) {
-        const err = { name: 'CastError', message: `Card with special id - ${userId} does not exist` };
+        const err = { name: 'CastError', message: `User with special id - ${userId} does not exist` };
         error = new CastError(err, errorAnswers.userIdError);
         res.status(error.statusCode).send({ message: `Ошибка ${error.statusCode}. ${errorAnswers.userIdError}` });
         return;
@@ -62,7 +63,7 @@ module.exports.createUser = (req, res) => {
 };
 
 module.exports.updateProfile = (req, res) => {
-  const userId = req.user._id;
+  const userId = req.cookies._id;
   const { name, about } = req.body;
   User.findByIdAndUpdate(
     userId,
@@ -87,7 +88,7 @@ module.exports.updateProfile = (req, res) => {
 };
 
 module.exports.updateAvatar = (req, res) => {
-  const userId = req.user._id;
+  const userId = req.cookies._id;
   const { avatar } = req.body;
   User.findByIdAndUpdate(
     userId,
@@ -113,15 +114,28 @@ module.exports.updateAvatar = (req, res) => {
 
 module.exports.login = (req, res) => {
   const { email, password } = req.body;
-  User.findOne({ email })
+  User.findUserByCredentials(email, password)
     .then((user) => {
-      if (!user) {
-        return Promise.reject(new Error('Неправильные почта или пароль'));
-      }
+      // create jwt
+      const token = jwt.sign({ _id: user._id }, 'mykey', { expiresIn: '7d' });
+      res.send({ token });
     })
-    // user exists
-
     .catch((err) => {
-      res.status(401).send({ message: err.message });
+      res.status(err.statusCode).send({ message: `Ошибка ${err.statusCode}. ${errorAnswers.wrongEmailPassword}` });
     });
 };
+
+// get data about active user
+module.exports.getProfileInfo = (req, res) => {
+  const currentUserId = req.cookies._id;
+  User.findById(currentUserId)
+  .then((user) => {
+    res.send({ data: user });
+  })
+  .catch((err) => {
+    // incorrect id
+    error = defineError(err, errorAnswers.userIdError);
+    res.status(error.statusCode).send({ message: `Ошибка ${error.statusCode}. ${errorAnswers.userIdError}` });
+  });
+
+}
