@@ -6,45 +6,57 @@ const { errorAnswers } = require('../utils/constants');
 
 const { ValidationError } = require('../utils/errorHandler/ValidationError');
 const { CastError } = require('../utils/errorHandler/CastError');
+const { validateUserId } = require('../utils/errorHandler/validationId/validateUserId');
 
 let error;
+let errorForUser;
 
-module.exports.getAllUsers = (req, res) => {
+function createErrorForUser(statusCode, errorText) {
+  return {
+    status: statusCode,
+    message: `Ошибка ${statusCode}. ${errorText}`,
+  };
+}
+
+module.exports.getAllUsers = (req, res, next) => {
   User.find({})
     .then((users) => res.send({ data: users }))
     .catch((err) => {
       error = defineError(err, errorAnswers.gettingUsersError);
-      res.status(error.statusCode).send({ message: `Ошибка ${error.statusCode}. ${errorAnswers.gettingUsersError}` });
+      errorForUser = createErrorForUser(error.statusCode, errorAnswers.gettingUsersError);
+      next(errorForUser);
     });
 };
 
-module.exports.getUserById = (req, res) => {
+module.exports.getUserById = (req, res, next) => {
   const { userId } = req.params;
 
   User.findById(userId)
     .then((user) => {
       // correct id but doesnt exist in bd
       if (!user) {
-        const err = { name: 'CastError', message: `User with special id - ${userId} does not exist` };
-        error = new CastError(err, errorAnswers.userIdError);
-        res.status(error.statusCode).send({ message: `Ошибка ${error.statusCode}. ${errorAnswers.userIdError}` });
-        return;
+        err = validateUserId(userId);
+        error = defineError(err, errorAnswers.userIdError);
+        errorForUser = createErrorForUser(error.statusCode, errorAnswers.userIdError);
+        next(errorForUser);
       }
       res.send({ data: user });
     })
     .catch((err) => {
       // incorrect id
       if (userId.length < 24) {
-        error = new ValidationError(err, errorAnswers.invalidIdError);
-        res.status(error.statusCode).send({ message: `Ошибка ${error.statusCode}. ${errorAnswers.invalidIdError}` });
-        return;
+        err = validateUserId(userId);
+        error = defineError(err, errorAnswers.invalidIdError);
+        errorForUser = createErrorForUser(error.statusCode, errorAnswers.invalidIdError);
+        next(errorForUser);
       }
       error = defineError(err, errorAnswers.userIdError);
-      res.status(error.statusCode).send({ message: `Ошибка ${error.statusCode}. ${errorAnswers.userIdError}` });
+      errorForUser = createErrorForUser(error.statusCode, errorAnswers.userIdError);
+      next(errorForUser);
     });
 };
 
-module.exports.createUser = (req, res) => {
+module.exports.createUser = (req, res, next) => {
   const { name, about, avatar, email, password } = req.body;
   bcrypt.hash(password, 10).then((hash) =>
     User.create({
@@ -57,12 +69,16 @@ module.exports.createUser = (req, res) => {
       .then((user) => res.send({ data: user }))
       .catch((err) => {
         error = defineError(err, errorAnswers.creationUserError);
-        res.status(error.statusCode).send({ message: `Ошибка ${error.statusCode}. ${errorAnswers.creationUserError}` });
+        errorForUser = createErrorForUser(
+          error.statusCode,
+          `Ошибка ${error.statusCode}. ${errorAnswers.creationUserError}`
+        );
+        next(errorForUser);
       })
   );
 };
 
-module.exports.updateProfile = (req, res) => {
+module.exports.updateProfile = (req, res, next) => {
   const userId = req.cookies._id;
   const { name, about } = req.body;
   User.findByIdAndUpdate(
@@ -78,16 +94,18 @@ module.exports.updateProfile = (req, res) => {
     .catch((err) => {
       // incorrect id
       if (userId.length < 24) {
-        error = new ValidationError(err, errorAnswers.invalidIdError);
-        res.status(error.statusCode).send({ message: `Ошибка ${error.statusCode}. ${errorAnswers.invalidIdError}` });
-        return;
+        err = validateUserId(userId);
+        error = defineError(err, errorAnswers.invalidIdError);
+        errorForUser = createErrorForUser(error.statusCode, errorAnswers.invalidIdError);
+        next(errorForUser);
       }
       error = defineError(err, errorAnswers.updatingUserError);
-      res.status(error.statusCode).send({ message: `Ошибка ${error.statusCode}. ${errorAnswers.updatingUserError}` });
+      errorForUser = createErrorForUser(error.statusCode, errorAnswers.updatingUserError);
+      next(errorForUser);
     });
 };
 
-module.exports.updateAvatar = (req, res) => {
+module.exports.updateAvatar = (req, res, next) => {
   const userId = req.cookies._id;
   const { avatar } = req.body;
   User.findByIdAndUpdate(
@@ -103,16 +121,18 @@ module.exports.updateAvatar = (req, res) => {
     .catch((err) => {
       // incorrect id
       if (userId.length < 24) {
-        error = new ValidationError(err, errorAnswers.invalidIdError);
-        res.status(error.statusCode).send({ message: `Ошибка ${error.statusCode}. ${errorAnswers.invalidIdError}` });
-        return;
+        err = validateUserId(userId);
+        error = defineError(err, errorAnswers.invalidIdError);
+        errorForUser = createErrorForUser(error.statusCode, errorAnswers.invalidIdError);
+        next(errorForUser);
       }
       error = defineError(err, errorAnswers.updatingAvatarError);
-      res.status(error.statusCode).send({ message: `Ошибка ${error.statusCode}. ${errorAnswers.updatingAvatarError}` });
+      errorForUser = createErrorForUser(error.statusCode, errorAnswers.updatingAvatarError);
+      next(errorForUser);
     });
 };
 
-module.exports.login = (req, res) => {
+module.exports.login = (req, res, next) => {
   const { email, password } = req.body;
   User.findUserByCredentials(email, password)
     .then((user) => {
@@ -121,21 +141,22 @@ module.exports.login = (req, res) => {
       res.send({ token });
     })
     .catch((err) => {
-      res.status(err.statusCode).send({ message: `Ошибка ${err.statusCode}. ${errorAnswers.wrongEmailPassword}` });
+      errorForUser = createErrorForUser(err.statusCode, errorAnswers.wrongEmailPassword);
+      next(errorForUser);
     });
 };
 
 // get data about active user
-module.exports.getProfileInfo = (req, res) => {
+module.exports.getProfileInfo = (req, res, next) => {
   const currentUserId = req.cookies._id;
   User.findById(currentUserId)
-  .then((user) => {
-    res.send({ data: user });
-  })
-  .catch((err) => {
-    // incorrect id
-    error = defineError(err, errorAnswers.userIdError);
-    res.status(error.statusCode).send({ message: `Ошибка ${error.statusCode}. ${errorAnswers.userIdError}` });
-  });
-
-}
+    .then((user) => {
+      res.send({ data: user });
+    })
+    .catch((err) => {
+      // incorrect id
+      error = defineError(err, errorAnswers.userIdError);
+      errorForUser = createErrorForUser(err.statusCode, errorAnswers.userIdError);
+      next(errorForUser);
+    });
+};

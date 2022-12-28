@@ -59,8 +59,13 @@ app.use('/cards', auth, cardRouter);
 app.use((req, res, next) => {
   const error = new WrongRouteError('Ошибка роутинга. Некорректный url адрес, запрос');
   error.logError();
-  res.status(error.statusCode).send({ message: `Ошибка ${error.statusCode}. Некорректный url адрес, запрос` });
-  next();
+  const errorForUser = {status: error.statusCode, message: `Ошибка ${error.statusCode}. Некорректный url адрес, запрос` }
+  next(errorForUser);
+});
+
+  // message for user about some errors
+app.use((err, req, res, next) => {
+  res.status(err.status).send({ message: err.message });
 });
 
 app.listen(PORT, () => {
