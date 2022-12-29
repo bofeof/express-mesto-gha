@@ -1,3 +1,4 @@
+const { errors, celebrate, Joi } = require('celebrate');
 const process = require('process');
 const express = require('express');
 const mongoose = require('mongoose');
@@ -50,8 +51,29 @@ app.use(helmet());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-app.post('/login', login);
-app.post('/signup', createUser);
+app.post(
+  '/login',
+  celebrate({
+    body: Joi.object().keys({
+      email: Joi.string().required().email(),
+      password: Joi.string().required().min(8),
+    }),
+  }),
+  login
+);
+app.post(
+  '/signup',
+  celebrate({
+    body: Joi.object().keys({
+      name: Joi.string().min(2).max(30),
+      about: Joi.string().min(2).max(30),
+      avatar: Joi.string().uri(),
+      email: Joi.string().required().email(),
+      password: Joi.string().required().min(8),
+    }),
+  }),
+  createUser
+);
 
 app.use('/users', auth, userRouter);
 app.use('/cards', auth, cardRouter);
@@ -59,14 +81,19 @@ app.use('/cards', auth, cardRouter);
 app.use((req, res, next) => {
   const error = new WrongRouteError('Ошибка роутинга. Некорректный url адрес, запрос');
   error.logError();
-  const errorForUser = {status: error.statusCode, message: `Ошибка ${error.statusCode}. Некорректный url адрес, запрос` }
-  next(errorForUser)
-})
+  const errorForUser = {
+    status: error.statusCode,
+    message: `Ошибка ${error.statusCode}. Некорректный url адрес, запрос`,
+  };
+  next(errorForUser);
+});
 
-  // message for user about some errors
+app.use(errors());
+
+// message for user about some errors
 app.use((err, req, res, next) => {
-  res.status(err.status).send({message: err.message})
-  next()
+  res.status(err.status).send({ message: err.message });
+  next();
 });
 
 app.listen(PORT, () => {
