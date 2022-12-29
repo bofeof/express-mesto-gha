@@ -15,7 +15,8 @@ const errorAnswers = {
   wrongEmailPassword: 'Ошибка входа в Mesto: неправильные почта и(или) пароль',
   authError: 'Необходима авторизация',
   tokenError: 'Ошибка с токеном авторизации',
-  forbiddenError: 'Недостаточно прав, чтобы совершить желаемое действие'
+  forbiddenError: 'Недостаточно прав для совершения действия',
+  getCardInfoError: 'Невозможно получить данные о карточке, чтобы совершать с ней дальнейшие действия'
 };
 const logFile = 'logs/Logs.log';
 

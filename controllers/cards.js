@@ -22,10 +22,11 @@ module.exports.getAllCards = (req, res, next) => {
       error = defineError(err, errorAnswers.gettingCardsError);
       errorForUser = createErrorForUser(error.statusCode, errorAnswers.gettingCardsError);
       next(errorForUser);
+      return;
     });
 };
 
-module.exports.createCard = (req, res) => {
+module.exports.createCard = (req, res, next) => {
   const owner = req.cookies._id;
   const { name, link } = req.body;
   Card.create({ name, link, owner })
@@ -34,41 +35,57 @@ module.exports.createCard = (req, res) => {
       error = defineError(err, errorAnswers.creationCardError);
       errorForUser = createErrorForUser(error.statusCode, errorAnswers.creationCardError);
       next(errorForUser);
+      return;
     });
 };
 
-module.exports.deleteCardbyId = (req, res) => {
+module.exports.deleteCardbyId = (req, res, next) => {
   const { cardId } = req.params;
-  const userId = req.cookies._id;
+  const userId = req.cookies._id._id;
 
-  Card.findByIdAndRemove(cardId, (err, removingCard) => {
-    // check if id from req is incorrect
-    if (!removingCard) {
-      const customErr = validateCardId(cardId);
-      error = defineError(customErr, errorAnswers.invalidIdError);
-      errorForUser = createErrorForUser(error.statusCode, errorAnswers.invalidIdError);
-      next(errorForUser);
-    }
-    if (userId !== removingCard.owner._id) {
-      const err = {
-        name: 'ForbiddenError',
-        message: `This user doesn't have rights to delete card. Only creator has ability to do it`,
-      };
-      error = defineError(err, errorAnswers.forbiddenError);
-      errorForUser = createErrorForUser(error.statusCode, errorAnswers.forbiddenError);
-      next(errorForUser);
-    }
+  // check if card exists and check owner
+  Card.findById(cardId)
+    .then((card) => {
+      if (userId !== card.owner._id.toString()) {
+        const err = {
+          name: 'ForbiddenError',
+          message: `This user doesn't have rights to delete card. Only creator has ability to do it`,
+        };
+        error = defineError(err, errorAnswers.forbiddenError);
+        errorForUser = createErrorForUser(error.statusCode, errorAnswers.forbiddenError);
+        next(errorForUser);
+        return;
+      }
 
-    if (err) {
-      error = defineError(err, errorAnswers.removingCardError);
-      errorForUser = createErrorForUser(error.statusCode, errorAnswers.removingCardError);
+      Card.findByIdAndRemove(cardId, (err, removingCard) => {
+        // check if id from req is incorrect
+        if (!removingCard) {
+          const customErr = validateCardId(cardId);
+          error = defineError(customErr, errorAnswers.removingCardError);
+          errorForUser = createErrorForUser(error.statusCode, errorAnswers.removingCardError);
+          next(errorForUser);
+          return;
+        }
+
+        if (err) {
+          error = defineError(err, errorAnswers.removingCardError);
+          errorForUser = createErrorForUser(error.statusCode, errorAnswers.removingCardError);
+          next(errorForUser);
+          return;
+        }
+        res.send({ card: removingCard });
+      }).populate(['owner', 'likes'])
+
+    })
+    .catch((err) => {
+      error = defineError({name: 'CastError', message: errorAnswers.removingCardError}, errorAnswers.removingCardError);
+      errorForUser = createErrorForUser(error.statusCode, errorAnswers.getCardInfoError);
       next(errorForUser);
-    }
-    res.send({ card: removingCard });
-  }).populate(['owner', 'likes']);
+      return;
+    });
 };
 
-module.exports.likeCard = (req, res) => {
+module.exports.likeCard = (req, res, next) => {
   const { cardId } = req.params;
   const userId = req.cookies._id;
   Card.findByIdAndUpdate(cardId, { $addToSet: { likes: userId } }, { new: true })
@@ -80,6 +97,7 @@ module.exports.likeCard = (req, res) => {
         error = defineError(customErr, errorAnswers.invalidIdError);
         errorForUser = createErrorForUser(error.statusCode, errorAnswers.cardIdError);
         next(errorForUser);
+        return;
       }
       res.send({ card: data });
     })
@@ -90,14 +108,16 @@ module.exports.likeCard = (req, res) => {
         error = defineError(customErr, errorAnswers.invalidIdError);
         errorForUser = createErrorForUser(error.statusCode, errorAnswers.invalidIdError);
         next(errorForUser);
+        return;
       }
       error = defineError(err, errorAnswers.settingLikeError);
       errorForUser = createErrorForUser(error.statusCode, errorAnswers.settingLikeError);
       next(errorForUser);
+      return;
     });
 };
 
-module.exports.dislikeCard = (req, res) => {
+module.exports.dislikeCard = (req, res, next) => {
   const { cardId } = req.params;
   const userId = req.cookies._id;
   Card.findByIdAndUpdate(cardId, { $pull: { likes: userId } }, { new: true })
@@ -109,6 +129,7 @@ module.exports.dislikeCard = (req, res) => {
         error = defineError(customErr, errorAnswers.invalidIdError);
         errorForUser = createErrorForUser(error.statusCode, errorAnswers.cardIdError);
         next(errorForUser);
+        return;
       }
       res.send({ card: data });
     })
@@ -119,9 +140,11 @@ module.exports.dislikeCard = (req, res) => {
         error = defineError(customErr, errorAnswers.invalidIdError);
         errorForUser = createErrorForUser(error.statusCode, errorAnswers.invalidIdError);
         next(errorForUser);
+        return;
       }
       error = defineError(err, errorAnswers.removingLikeError);
       errorForUser = createErrorForUser(error.statusCode, errorAnswers.removingLikeError);
       next(errorForUser);
+      return;
     });
 };

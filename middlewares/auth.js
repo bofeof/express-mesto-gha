@@ -3,6 +3,14 @@ const jwt = require('jsonwebtoken');
 const defineError = require('../utils/errorHandler/ErrorHandler');
 const { errorAnswers } = require('../utils/constants');
 let error;
+let errorForUser;
+
+function createErrorForUser(statusCode, errorText) {
+  return {
+    status: statusCode,
+    message: `Ошибка ${statusCode}. ${errorText}`,
+  };
+}
 
 module.exports = (req, res, next) => {
   const { authorization } = req.headers;
@@ -13,7 +21,9 @@ module.exports = (req, res, next) => {
       message: `Unauthorized error. Authorization (header of request) is required`,
     };
     error = defineError(err, errorAnswers.authError);
-    return res.status(error.statusCode).send({ message: `Ошибка ${error.statusCode}. ${errorAnswers.authError}` });
+    errorForUser = createErrorForUser(error.statusCode, errorAnswers.authError);
+    next(errorForUser);
+    return;
   }
 
   const token = authorization.replace('Bearer ', '');
@@ -27,7 +37,9 @@ module.exports = (req, res, next) => {
       message: `Unauthorized error. Token error`,
     };
     error = defineError(tokenError, errorAnswers.tokenError);
-    return res.status(error.statusCode).send({ message: `Ошибка ${error.statusCode}. ${errorAnswers.tokenError}` });
+    errorForUser = createErrorForUser(error.statusCode, errorAnswers.tokenError);
+    next(errorForUser);
+    return;
   }
 
   res.cookie('_id', payload, {
