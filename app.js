@@ -52,7 +52,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 app.post(
-  '/login',
+  '/signin',
   celebrate({
     body: Joi.object().keys({
       email: Joi.string().required().email(),
