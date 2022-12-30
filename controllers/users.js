@@ -168,7 +168,6 @@ module.exports.login = (req, res, next) => {
 module.exports.getProfileInfo = (req, res, next) => {
   const currentUserId = req.user._id;
   User.findById(currentUserId)
-    .select('+password')
     .then((user) => {
       res.send({ data: user });
     })
