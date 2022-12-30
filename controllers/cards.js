@@ -41,12 +41,12 @@ module.exports.createCard = (req, res, next) => {
 
 module.exports.deleteCardbyId = (req, res, next) => {
   const { cardId } = req.params;
-  const userId = req.user._id._id;
+  const userId = req.user._id;
 
   // check if card exists and check owner
   Card.findById(cardId)
     .then((card) => {
-      if (userId !== card.owner._id.toString()) {
+      if (userId != card.owner._id) {
         const err = {
           name: 'ForbiddenError',
           message: `This user doesn't have rights to delete card. Only creator has ability to do it`,
