@@ -74,11 +74,13 @@ module.exports.deleteCardbyId = (req, res, next) => {
           return;
         }
         res.send({ card: removingCard });
-      }).populate(['owner', 'likes'])
-
+      }).populate(['owner', 'likes']);
     })
     .catch((err) => {
-      error = defineError({name: 'CastError', message: errorAnswers.removingCardError}, errorAnswers.removingCardError);
+      error = defineError(
+        { name: 'CastError', message: errorAnswers.removingCardError },
+        errorAnswers.removingCardError
+      );
       errorForUser = createErrorForUser(error.statusCode, errorAnswers.getCardInfoError);
       next(errorForUser);
       return;
@@ -88,7 +90,6 @@ module.exports.deleteCardbyId = (req, res, next) => {
 module.exports.likeCard = (req, res, next) => {
   const { cardId } = req.params;
   const userId = req.user._id;
-  console.log(userId)
   Card.findByIdAndUpdate(cardId, { $addToSet: { likes: userId } }, { new: true })
     .populate(['owner', 'likes'])
     .then((data) => {
