@@ -42,10 +42,7 @@ module.exports = (req, res, next) => {
     return;
   }
 
-  res.cookie('_id', payload, {
-    maxAge: 60 * 60 * 1000 * 24 * 7, //7 days
-    httpOnly: true,
-  });
+  req.user = payload;
 
   next();
 };

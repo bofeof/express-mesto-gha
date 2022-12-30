@@ -27,7 +27,7 @@ module.exports.getAllCards = (req, res, next) => {
 };
 
 module.exports.createCard = (req, res, next) => {
-  const owner = req.cookies._id;
+  const owner = req.user._id;
   const { name, link } = req.body;
   Card.create({ name, link, owner })
     .then((data) => res.send({ card: data }))
@@ -41,7 +41,7 @@ module.exports.createCard = (req, res, next) => {
 
 module.exports.deleteCardbyId = (req, res, next) => {
   const { cardId } = req.params;
-  const userId = req.cookies._id._id;
+  const userId = req.user._id._id;
 
   // check if card exists and check owner
   Card.findById(cardId)
@@ -87,11 +87,12 @@ module.exports.deleteCardbyId = (req, res, next) => {
 
 module.exports.likeCard = (req, res, next) => {
   const { cardId } = req.params;
-  const userId = req.cookies._id;
+  const userId = req.user._id;
+  console.log(userId)
   Card.findByIdAndUpdate(cardId, { $addToSet: { likes: userId } }, { new: true })
     .populate(['owner', 'likes'])
     .then((data) => {
-      // correct id but doesnt exist in bd
+      // correct id but doesnt exist in db
       if (!data) {
         const customErr = validateCardId(cardId);
         error = defineError(customErr, errorAnswers.invalidIdError);
@@ -119,11 +120,11 @@ module.exports.likeCard = (req, res, next) => {
 
 module.exports.dislikeCard = (req, res, next) => {
   const { cardId } = req.params;
-  const userId = req.cookies._id;
+  const userId = req.user._id;
   Card.findByIdAndUpdate(cardId, { $pull: { likes: userId } }, { new: true })
     .populate(['owner', 'likes'])
     .then((data) => {
-      // correct id but doesnt exist in bd
+      // correct id but doesnt exist in db
       if (!data) {
         const customErr = validateCardId(cardId);
         error = defineError(customErr, errorAnswers.invalidIdError);

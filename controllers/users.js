@@ -4,8 +4,6 @@ const User = require('../models/user');
 const defineError = require('../utils/errorHandler/ErrorHandler');
 const { errorAnswers } = require('../utils/constants');
 
-// const { ValidationError } = require('../utils/errorHandler/ValidationError');
-// const { CastError } = require('../utils/errorHandler/CastError');
 const { validateUserId } = require('../utils/errorHandler/validationId/validateUserId');
 
 let error;
@@ -81,7 +79,7 @@ module.exports.createUser = (req, res, next) => {
 };
 
 module.exports.updateProfile = (req, res, next) => {
-  const userId = req.cookies._id;
+  const userId = req.user._id;
   const { name, about } = req.body;
   User.findByIdAndUpdate(
     userId,
@@ -110,7 +108,7 @@ module.exports.updateProfile = (req, res, next) => {
 };
 
 module.exports.updateAvatar = (req, res, next) => {
-  const userId = req.cookies._id;
+  const userId = req.user._id;
   const { avatar } = req.body;
   User.findByIdAndUpdate(
     userId,
@@ -155,8 +153,8 @@ module.exports.login = (req, res, next) => {
 
 // get data about active user
 module.exports.getProfileInfo = (req, res, next) => {
-  const currentUserId = req.cookies._id;
-  User.findById(currentUserId)
+  const currentUserId = req.user._id;
+  User.findById(currentUserId).select('+password')
     .then((user) => {
       res.send({ data: user });
     })
