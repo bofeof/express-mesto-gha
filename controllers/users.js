@@ -72,7 +72,6 @@ module.exports.createUser = (req, res, next) => {
         const userId = user._id;
         User.findById(userId)
           .then((user) => {
-            // correct id but doesnt exist in bd
             res.send({ data: user });
           })
           .catch((err) => {
