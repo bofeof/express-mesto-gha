@@ -68,7 +68,20 @@ module.exports.createUser = (req, res, next) => {
       email,
       password: hash,
     })
-      .then((user) => res.send({ data: user }))
+      .then((user) => {
+        const userId = user._id;
+        User.findById(userId)
+          .then((user) => {
+            // correct id but doesnt exist in bd
+            res.send({ data: user });
+          })
+          .catch((err) => {
+            error = defineError(err, errorAnswers.userIdError);
+            errorForUser = createErrorForUser(error.statusCode, errorAnswers.userIdError);
+            next(errorForUser);
+            return;
+          });
+      })
       .catch((err) => {
         error = defineError(err, errorAnswers.creationUserError);
         errorForUser = createErrorForUser(error.statusCode, errorAnswers.creationUserError);
@@ -154,7 +167,8 @@ module.exports.login = (req, res, next) => {
 // get data about active user
 module.exports.getProfileInfo = (req, res, next) => {
   const currentUserId = req.user._id;
-  User.findById(currentUserId).select('+password')
+  User.findById(currentUserId)
+    .select('+password')
     .then((user) => {
       res.send({ data: user });
     })
