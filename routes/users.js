@@ -1,79 +1,47 @@
 const { celebrate, Joi } = require('celebrate');
 const userRouter = require('express').Router();
-const { getAllUsers, getUserById, updateProfile, updateAvatar, getProfileInfo } = require('../controllers/users');
+const {
+  getAllUsers, getUserById, updateProfile, updateAvatar, getProfileInfo,
+} = require('../controllers/users');
 
 // return all users
-userRouter.get(
-  '/',
-  celebrate({
-    headers: Joi.object()
-      .keys({
-        authorization: Joi.string().required(),
-      })
-      .unknown(true),
-  }),
-  getAllUsers
-);
+userRouter.get('/', getAllUsers);
 
-userRouter.get(
-  '/me',
-  celebrate({
-    headers: Joi.object()
-      .keys({
-        authorization: Joi.string().required(),
-      })
-      .unknown(true),
-  }),
-  getProfileInfo
-);
+userRouter.get('/me', getProfileInfo);
 
 // return user using id
 userRouter.get(
   '/:userId',
   celebrate({
-    headers: Joi.object()
-      .keys({
-        authorization: Joi.string().required(),
-      })
-      .unknown(true),
     params: Joi.object().keys({
-      userId: Joi.string().required().min(24).max(24),
+      userId: Joi.string().required().min(24).max(24)
+        .hex(),
     }),
   }),
-  getUserById
+  getUserById,
 );
 
 // update profile
 userRouter.patch(
   '/me',
   celebrate({
-    headers: Joi.object()
-      .keys({
-        authorization: Joi.string().required(),
-      })
-      .unknown(true),
     body: Joi.object().keys({
       name: Joi.string().required().min(2).max(30),
       about: Joi.string().required().min(2).max(30),
     }),
   }),
-  updateProfile
+  updateProfile,
 );
 
 // update avatar
 userRouter.patch(
   '/me/avatar',
   celebrate({
-    headers: Joi.object()
-      .keys({
-        authorization: Joi.string().required(),
-      })
-      .unknown(true),
-    // body: Joi.object().keys({
-    //   avatar: Joi.string().required().uri(),
-    // }),
+    body: Joi.object().keys({
+      avatar: Joi.string().required().uri(),
+    }),
   }),
-  updateAvatar
+  updateAvatar,
 );
 
 module.exports = userRouter;

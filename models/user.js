@@ -43,39 +43,39 @@ const userSchema = new mongoose.Schema({
   password: {
     type: String,
     required: true,
-    minlength: 8,
     select: false,
   },
 });
 
 userSchema.index({ email: 1 }, { unique: true });
 
+// eslint-disable-next-line func-names
 userSchema.statics.findUserByCredentials = function (email, password) {
   return this.findOne({ email }).select('+password')
-  .then((user) => {
-    if (!user) {
-      const err = {
-        name: 'UnauthorizedError',
-        message: `Unauthorized error. User with these combination of email and password does not exist`,
-      };
-      error = defineError(err, errorAnswers.wrongEmailPassword);
-      return Promise.reject(error);
-    }
-
-    // user exists, password check
-    return bcrypt.compare(password, user.password).then((matched) => {
-      if (!matched) {
+    .then((user) => {
+      if (!user) {
         const err = {
           name: 'UnauthorizedError',
-          message: `Unauthorized error. User already exists. Wrong password`,
+          message: 'Unauthorized error. User with these combination of email and password does not exist',
         };
         error = defineError(err, errorAnswers.wrongEmailPassword);
         return Promise.reject(error);
       }
-      // user exists, password is correct
-      return user;
+
+      // user exists, password check
+      return bcrypt.compare(password, user.password).then((matched) => {
+        if (!matched) {
+          const err = {
+            name: 'UnauthorizedError',
+            message: 'Unauthorized error. User already exists. Wrong password',
+          };
+          error = defineError(err, errorAnswers.wrongEmailPassword);
+          return Promise.reject(error);
+        }
+        // user exists, password is correct
+        return user;
+      });
     });
-  });
 };
 
 module.exports = mongoose.model('user', userSchema);

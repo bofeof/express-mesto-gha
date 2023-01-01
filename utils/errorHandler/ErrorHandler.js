@@ -12,48 +12,69 @@ let error;
 function defineError(err, message) {
   // 400
   if (err.name === 'ValidationError') {
-    error = new ValidationError(`Ошибка. ${message}. ${err.name} : ${err.message}`);
+    error = new ValidationError({
+      message: `Ошибка. ${message}`,
+      logMessage: `Ошибка. ${message}. ${err.name} : ${err.message}`,
+    });
     error.logError();
     return error;
   }
 
   // 400 - can't registrate user again
-  if (err.code == 11000) {
-    error = new UserExistsError(`Ошибка. ${message}. ${err.name} : ${err.message}`);
+  if (err.code === 11000) {
+    error = new UserExistsError({
+      message: `Ошибка. ${message}`,
+      logMessage: `Ошибка. ${message}. ${err.name} : ${err.message}`,
+    });
     error.logError();
     return error;
   }
 
   // 401 - login error
   if (err.name === 'UnauthorizedError') {
-    error = new UnauthorizedError(`Ошибка. ${message}. ${err.name} : ${err.message}`);
+    error = new UnauthorizedError({
+      message: `Ошибка. ${message}`,
+      logMessage: `Ошибка. ${message}. ${err.name} : ${err.message}`,
+    });
     error.logError();
     return error;
   }
 
   // 401 token error
   if (err.name === 'TokenError') {
-    error = new TokenError(`Ошибка. ${message}. ${err.name} : ${err.message}`);
+    error = new TokenError({
+      message: `Ошибка. ${message}`,
+      logMessage: `Ошибка. ${message}. ${err.name} : ${err.message}`,
+    });
     error.logError();
     return error;
   }
 
   // 403
   if (err.name === 'ForbiddenError') {
-    error = new ForbiddenError(`Ошибка. ${message}. ${err.name} : ${err.message}`);
+    error = new ForbiddenError({
+      message: `Ошибка. ${message}`,
+      logMessage: `Ошибка. ${message}. ${err.name} : ${err.message}`,
+    });
     error.logError();
     return error;
   }
 
   // 404
   if (err.name === 'CastError') {
-    error = new CastError(`Ошибка. ${message}. ${err.name} : ${err.message}`);
+    error = new CastError({
+      message: `Ошибка. ${message}`,
+      logMessage: `Ошибка. ${message}. ${err.name} : ${err.message}`,
+    });
     error.logError();
     return error;
   }
 
   // 500
-  error = new InternalServerError(`Ошибка. ${message}. ${err.name} : ${err.message}`);
+  error = new InternalServerError({
+    message: `Ошибка. ${message}`,
+    logMessage: `Ошибка. ${message}. ${err.name} : ${err.message}`,
+  });
   error.logError();
   return error;
 }

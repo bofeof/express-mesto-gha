@@ -1,14 +1,15 @@
 const { writeDataToLogFile } = require('../logPreparation/writeDataToLogFile');
 
 class UnknownError extends Error {
-  constructor(message) {
+  constructor({ message, logMessage }) {
     super(message);
     this.name = 'UnknownError';
     this.statusCode = 500;
+    this.logMessage = logMessage;
   }
 
   logError() {
-    writeDataToLogFile(this.statusCode, this.message);
+    writeDataToLogFile(this.statusCode, this.logMessage);
   }
 }
 

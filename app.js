@@ -7,6 +7,7 @@ const rateLimit = require('express-rate-limit');
 const helmet = require('helmet');
 const cookieParser = require('cookie-parser');
 
+const { errorAnswers } = require('./utils/constants');
 const auth = require('./middlewares/auth');
 
 const { PORT = 3000 } = process.env;
@@ -32,9 +33,10 @@ prepareLogFile();
 
 process.on('uncaughtException', (err, origin) => {
   const error = new UnknownError(
-    `${origin} ${err.name} c текстом ${err.message} не была обработана. Обратите внимание!`
+    `${origin} ${err.name} c текстом ${err.message} не была обработана. Обратите внимание!`,
   );
   error.logError();
+  // eslint-disable-next-line no-console
   console.log(`Непредвиденная ошибка! ${err.message}`);
 });
 
@@ -56,10 +58,10 @@ app.post(
   celebrate({
     body: Joi.object().keys({
       email: Joi.string().required().email(),
-      password: Joi.string().required().min(8),
+      password: Joi.string().required(),
     }),
   }),
-  login
+  login,
 );
 app.post(
   '/signup',
@@ -69,33 +71,31 @@ app.post(
       about: Joi.string().min(2).max(30),
       avatar: Joi.string().uri(),
       email: Joi.string().required().email(),
-      password: Joi.string().required().min(8),
+      password: Joi.string().required(),
     }),
   }),
-  createUser
+  createUser,
 );
 
 app.use('/users', auth, userRouter);
 app.use('/cards', auth, cardRouter);
 
 app.use((req, res, next) => {
-  const error = new WrongRouteError('Ошибка роутинга. Некорректный url адрес, запрос');
-  error.logError();
-  const errorForUser = {
-    status: error.statusCode,
-    message: `Ошибка ${error.statusCode}. Некорректный url адрес, запрос`,
-  };
-  next(errorForUser);
+  next(new WrongRouteError({
+    message: errorAnswers.routeError,
+    logMessage: errorAnswers.routeError,
+  }));
 });
 
 app.use(errors());
 
 // message for user about some errors
 app.use((err, req, res, next) => {
-  res.status(err.status).send({ message: err.message });
+  res.status(err.statusCode).send({ message: err.message });
   next();
 });
 
 app.listen(PORT, () => {
+  // eslint-disable-next-line no-console
   console.log(`App listening on port ${PORT}`);
 });

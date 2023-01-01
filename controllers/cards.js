@@ -2,27 +2,17 @@ const Card = require('../models/card');
 const defineError = require('../utils/errorHandler/ErrorHandler');
 const { errorAnswers } = require('../utils/constants');
 const { validateCardId } = require('../utils/errorHandler/validationId/validateCardId');
-const { validateUserId } = require('../utils/errorHandler/validationId/validateUserId');
+const { CastError } = require('../utils/errorHandler/CastError');
 
 let error;
-let errorForUser;
-
-function createErrorForUser(statusCode, errorText) {
-  return {
-    status: statusCode,
-    message: `Ошибка ${statusCode}. ${errorText}`,
-  };
-}
 
 module.exports.getAllCards = (req, res, next) => {
   Card.find({})
     .populate(['owner', 'likes'])
     .then((data) => res.send({ cards: data }))
     .catch((err) => {
-      error = defineError(err, errorAnswers.gettingCardsError);
-      errorForUser = createErrorForUser(error.statusCode, errorAnswers.gettingCardsError);
-      next(errorForUser);
-      return;
+      // error = defineError(err, errorAnswers.gettingCardsError);
+      next(err);
     });
 };
 
@@ -32,10 +22,8 @@ module.exports.createCard = (req, res, next) => {
   Card.create({ name, link, owner })
     .then((data) => res.send({ card: data }))
     .catch((err) => {
-      error = defineError(err, errorAnswers.creationCardError);
-      errorForUser = createErrorForUser(error.statusCode, errorAnswers.creationCardError);
-      next(errorForUser);
-      return;
+      // error = defineError(err, errorAnswers.creationCardError);
+      next(err);
     });
 };
 
@@ -46,44 +34,44 @@ module.exports.deleteCardbyId = (req, res, next) => {
   // check if card exists and check owner
   Card.findById(cardId)
     .then((card) => {
-      if (userId != card.owner._id) {
+      if (!card) {
+        throw new CastError({
+          message: errorAnswers.removingCard,
+          logMessage: errorAnswers.removingCard,
+        });
+      }
+      // card exists
+      const ownerCardId = card.owner._id.toString();
+      if (userId !== ownerCardId) {
         const err = {
           name: 'ForbiddenError',
-          message: `This user doesn't have rights to delete card. Only creator has ability to do it`,
+          message: 'This user doesn\'t have rights to delete card. Only creator has ability to do it',
         };
         error = defineError(err, errorAnswers.forbiddenError);
-        errorForUser = createErrorForUser(error.statusCode, errorAnswers.forbiddenError);
-        next(errorForUser);
+        next(error);
         return;
       }
-
       Card.findByIdAndRemove(cardId, (err, removingCard) => {
         // check if id from req is incorrect
         if (!removingCard) {
           const customErr = validateCardId(cardId);
           error = defineError(customErr, errorAnswers.removingCardError);
-          errorForUser = createErrorForUser(error.statusCode, errorAnswers.removingCardError);
-          next(errorForUser);
+          next(error);
           return;
         }
 
         if (err) {
           error = defineError(err, errorAnswers.removingCardError);
-          errorForUser = createErrorForUser(error.statusCode, errorAnswers.removingCardError);
-          next(errorForUser);
+          next(error);
           return;
         }
+
         res.send({ card: removingCard });
       }).populate(['owner', 'likes']);
     })
     .catch((err) => {
-      error = defineError(
-        { name: 'CastError', message: errorAnswers.removingCardError },
-        errorAnswers.removingCardError
-      );
-      errorForUser = createErrorForUser(error.statusCode, errorAnswers.getCardInfoError);
-      next(errorForUser);
-      return;
+      // error = defineError(err, errorAnswers.removingCardError);
+      next(err);
     });
 };
 
@@ -96,26 +84,15 @@ module.exports.likeCard = (req, res, next) => {
       // correct id but doesnt exist in db
       if (!data) {
         const customErr = validateCardId(cardId);
-        error = defineError(customErr, errorAnswers.invalidIdError);
-        errorForUser = createErrorForUser(error.statusCode, errorAnswers.cardIdError);
-        next(errorForUser);
+        error = defineError(customErr, errorAnswers.settingLikeError);
+        next(error);
         return;
       }
       res.send({ card: data });
     })
     .catch((err) => {
-      // incorrect ids
-      if (!!validateCardId(cardId) || !!validateUserId(userId)) {
-        const customErr = validateCardId(cardId);
-        error = defineError(customErr, errorAnswers.invalidIdError);
-        errorForUser = createErrorForUser(error.statusCode, errorAnswers.invalidIdError);
-        next(errorForUser);
-        return;
-      }
-      error = defineError(err, errorAnswers.settingLikeError);
-      errorForUser = createErrorForUser(error.statusCode, errorAnswers.settingLikeError);
-      next(errorForUser);
-      return;
+      // error = defineError(err, errorAnswers.settingLikeError);
+      next(err);
     });
 };
 
@@ -128,25 +105,14 @@ module.exports.dislikeCard = (req, res, next) => {
       // correct id but doesnt exist in db
       if (!data) {
         const customErr = validateCardId(cardId);
-        error = defineError(customErr, errorAnswers.invalidIdError);
-        errorForUser = createErrorForUser(error.statusCode, errorAnswers.cardIdError);
-        next(errorForUser);
+        error = defineError(customErr, errorAnswers.removingLikeError);
+        next(error);
         return;
       }
       res.send({ card: data });
     })
     .catch((err) => {
-      // incorrect ids
-      if (!!validateCardId(cardId) || !!validateUserId(userId)) {
-        const customErr = validateCardId(cardId);
-        error = defineError(customErr, errorAnswers.invalidIdError);
-        errorForUser = createErrorForUser(error.statusCode, errorAnswers.invalidIdError);
-        next(errorForUser);
-        return;
-      }
-      error = defineError(err, errorAnswers.removingLikeError);
-      errorForUser = createErrorForUser(error.statusCode, errorAnswers.removingLikeError);
-      next(errorForUser);
-      return;
+      // error = defineError(err, errorAnswers.removingLikeError);
+      next(err);
     });
 };

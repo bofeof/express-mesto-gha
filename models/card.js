@@ -20,6 +20,12 @@ const cardSchema = new mongoose.Schema({
       type: mongoose.Schema.Types.ObjectId,
       ref: 'user',
       default: [],
+      validate: {
+        validator(v) {
+          return (/^(http|https)\W+[w]{0,3}\S*[#]*$/gi).test(v);
+        },
+        message: 'Incorrect card link',
+      },
     },
   ],
   createdAt: {
