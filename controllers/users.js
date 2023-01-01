@@ -1,18 +1,15 @@
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const User = require('../models/user');
-const defineError = require('../utils/errorHandler/ErrorHandler');
 const { errorAnswers } = require('../utils/constants');
 
-const { validateUserId } = require('../utils/errorHandler/validationId/validateUserId');
-
-let error;
+const { DublicateDataError } = require('../utils/errorHandler/DublicateDataError');
+const { CastError } = require('../utils/errorHandler/CastError');
 
 module.exports.getAllUsers = (req, res, next) => {
   User.find({})
     .then((users) => res.send({ data: users }))
     .catch((err) => {
-      // error = defineError(err, errorAnswers.gettingUsersError);
       next(err);
     });
 };
@@ -22,24 +19,14 @@ module.exports.getUserById = (req, res, next) => {
 
   User.findById(userId)
     .then((user) => {
-      // correct id but doesnt exist in bd
+      // correct id but doesnt exist in db
       if (!user) {
-        const err = validateUserId(userId);
-        error = defineError(err, errorAnswers.userIdError);
-        next(error);
+        next(new CastError({ message: errorAnswers.userIdError }));
         return;
       }
       res.send({ data: user });
     })
     .catch((err) => {
-      // incorrect id
-      // if (userId.length < 24 || userId.length > 24) {
-      //   const customErr = validateUserId(userId);
-      //   error = defineError(customErr, errorAnswers.userIdError);
-      //   next(error);
-      //   return;
-      // }
-      // error = defineError(err, errorAnswers.userIdError);
       next(err);
     });
 };
@@ -55,9 +42,23 @@ module.exports.createUser = (req, res, next) => {
     email,
     password: hash,
   })
-    .then((user) => res.send({ data: user }))
+    .then((user) => {
+      User.findById(user._id)
+        .then((newUser) => {
+          res.send({ data: newUser });
+        })
+        .catch((err) => {
+          next(err);
+        });
+    })
     .catch((err) => {
-      // error = defineError(err, errorAnswers.creationUserError);
+      // check 11000, user already exists
+      if (err.code === 11000) {
+        next(new DublicateDataError({
+          message: errorAnswers.creationUserError,
+        }));
+        return;
+      }
       next(err);
     }));
 };
@@ -76,7 +77,6 @@ module.exports.updateProfile = (req, res, next) => {
   )
     .then((data) => res.send({ user: data }))
     .catch((err) => {
-      // error = defineError(err, errorAnswers.updatingUserError);
       next(err);
     });
 };
@@ -95,14 +95,6 @@ module.exports.updateAvatar = (req, res, next) => {
   )
     .then((data) => res.send({ user: data }))
     .catch((err) => {
-      // incorrect id
-      if (userId.length < 24 || userId.length > 24) {
-        const custonErr = validateUserId(userId);
-        error = defineError(custonErr, errorAnswers.updatingAvatarError);
-        next(error);
-        return;
-      }
-      // error = defineError(err, errorAnswers.updatingAvatarError);
       next(err);
     });
 };
@@ -116,7 +108,6 @@ module.exports.login = (req, res, next) => {
       res.send({ token });
     })
     .catch((err) => {
-      // error = defineError(err, errorAnswers.wrongEmailPassword);
       next(err);
     });
 };
@@ -129,7 +120,6 @@ module.exports.getProfileInfo = (req, res, next) => {
       res.send({ data: user });
     })
     .catch((err) => {
-      // error = defineError(err, errorAnswers.getUserById);
       next(err);
     });
 };

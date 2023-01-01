@@ -1,17 +1,13 @@
 const Card = require('../models/card');
-const defineError = require('../utils/errorHandler/ErrorHandler');
 const { errorAnswers } = require('../utils/constants');
-const { validateCardId } = require('../utils/errorHandler/validationId/validateCardId');
 const { CastError } = require('../utils/errorHandler/CastError');
-
-let error;
+const { ForbiddenError } = require('../utils/errorHandler/ForbiddenError');
 
 module.exports.getAllCards = (req, res, next) => {
   Card.find({})
     .populate(['owner', 'likes'])
     .then((data) => res.send({ cards: data }))
     .catch((err) => {
-      // error = defineError(err, errorAnswers.gettingCardsError);
       next(err);
     });
 };
@@ -22,7 +18,6 @@ module.exports.createCard = (req, res, next) => {
   Card.create({ name, link, owner })
     .then((data) => res.send({ card: data }))
     .catch((err) => {
-      // error = defineError(err, errorAnswers.creationCardError);
       next(err);
     });
 };
@@ -35,42 +30,25 @@ module.exports.deleteCardbyId = (req, res, next) => {
   Card.findById(cardId)
     .then((card) => {
       if (!card) {
-        throw new CastError({
-          message: errorAnswers.removingCard,
-          logMessage: errorAnswers.removingCard,
-        });
+        next(new CastError({ message: errorAnswers.removingCardError }));
+        return;
       }
       // card exists
       const ownerCardId = card.owner._id.toString();
       if (userId !== ownerCardId) {
-        const err = {
-          name: 'ForbiddenError',
-          message: 'This user doesn\'t have rights to delete card. Only creator has ability to do it',
-        };
-        error = defineError(err, errorAnswers.forbiddenError);
-        next(error);
+        next(new ForbiddenError({ message: errorAnswers.forbiddenError }));
         return;
       }
+
       Card.findByIdAndRemove(cardId, (err, removingCard) => {
-        // check if id from req is incorrect
-        if (!removingCard) {
-          const customErr = validateCardId(cardId);
-          error = defineError(customErr, errorAnswers.removingCardError);
-          next(error);
-          return;
-        }
-
         if (err) {
-          error = defineError(err, errorAnswers.removingCardError);
-          next(error);
+          next(err);
           return;
         }
-
         res.send({ card: removingCard });
       }).populate(['owner', 'likes']);
     })
     .catch((err) => {
-      // error = defineError(err, errorAnswers.removingCardError);
       next(err);
     });
 };
@@ -83,15 +61,12 @@ module.exports.likeCard = (req, res, next) => {
     .then((data) => {
       // correct id but doesnt exist in db
       if (!data) {
-        const customErr = validateCardId(cardId);
-        error = defineError(customErr, errorAnswers.settingLikeError);
-        next(error);
+        next(new CastError({ message: errorAnswers.settingLikeError }));
         return;
       }
       res.send({ card: data });
     })
     .catch((err) => {
-      // error = defineError(err, errorAnswers.settingLikeError);
       next(err);
     });
 };
@@ -104,15 +79,12 @@ module.exports.dislikeCard = (req, res, next) => {
     .then((data) => {
       // correct id but doesnt exist in db
       if (!data) {
-        const customErr = validateCardId(cardId);
-        error = defineError(customErr, errorAnswers.removingLikeError);
-        next(error);
+        next(new CastError({ message: errorAnswers.removingLikeError }));
         return;
       }
       res.send({ card: data });
     })
     .catch((err) => {
-      // error = defineError(err, errorAnswers.removingLikeError);
       next(err);
     });
 };

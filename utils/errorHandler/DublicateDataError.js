@@ -1,10 +1,10 @@
 const { writeDataToLogFile } = require('../logPreparation/writeDataToLogFile');
 
-class TokenError extends Error {
+class DublicateDataError extends Error {
   constructor({ message, logMessage }) {
     super(message);
-    this.name = 'TokenError';
-    this.statusCode = 401;
+    this.name = 'UserExists';
+    this.statusCode = 409;
     this.logMessage = logMessage;
   }
 
@@ -13,4 +13,4 @@ class TokenError extends Error {
   }
 }
 
-module.exports.TokenError = TokenError;
+module.exports.DublicateDataError = DublicateDataError;

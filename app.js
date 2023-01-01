@@ -25,16 +25,17 @@ const { login, createUser } = require('./controllers/users');
 const limiter = rateLimit({
   windowMs: 5 * 60 * 1000,
   max: 200, // 200 reqs per 5 min
-  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
-  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+  standardHeaders: true,
+  legacyHeaders: false,
 });
 
 prepareLogFile();
 
 process.on('uncaughtException', (err, origin) => {
-  const error = new UnknownError(
-    `${origin} ${err.name} c текстом ${err.message} не была обработана. Обратите внимание!`,
-  );
+  const error = new UnknownError({
+    message: `${origin} ${err.name} c текстом ${err.message} не была обработана. Обратите внимание!`,
+    logMessage: `${origin} ${err.name} c текстом ${err.message} не была обработана. Обратите внимание!`,
+  });
   error.logError();
   // eslint-disable-next-line no-console
   console.log(`Непредвиденная ошибка! ${err.message}`);
@@ -83,7 +84,6 @@ app.use('/cards', auth, cardRouter);
 app.use((req, res, next) => {
   next(new WrongRouteError({
     message: errorAnswers.routeError,
-    logMessage: errorAnswers.routeError,
   }));
 });
 
@@ -91,7 +91,7 @@ app.use(errors());
 
 // message for user about some errors
 app.use((err, req, res, next) => {
-  res.status(err.statusCode).send({ message: err.message });
+  res.status(err.statusCode || 500).send({ message: err.message });
   next();
 });
 
