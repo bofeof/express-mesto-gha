@@ -5,6 +5,7 @@ const { errorAnswers } = require('../utils/constants');
 
 const { DublicateDataError } = require('../utils/errorHandler/DublicateDataError');
 const { CastError } = require('../utils/errorHandler/CastError');
+const { ValidationError } = require('../utils/errorHandler/ValidationError');
 
 module.exports.getAllUsers = (req, res, next) => {
   User.find({})
@@ -59,12 +60,16 @@ module.exports.createUser = (req, res, next) => {
         }));
         return;
       }
+      if (err.name === 'ValidationError') {
+        next(new ValidationError({ message: err.message }));
+        return;
+      }
       next(err);
     }));
 };
 
 module.exports.updateProfile = (req, res, next) => {
-  const userId = req.cookies._id;
+  const userId = req.user._id;
   const { name, about } = req.body;
   User.findByIdAndUpdate(
     userId,
@@ -82,7 +87,7 @@ module.exports.updateProfile = (req, res, next) => {
 };
 
 module.exports.updateAvatar = (req, res, next) => {
-  const userId = req.cookies._id;
+  const userId = req.user._id;
   const { avatar } = req.body;
   User.findByIdAndUpdate(
     userId,
@@ -95,6 +100,10 @@ module.exports.updateAvatar = (req, res, next) => {
   )
     .then((data) => res.send({ user: data }))
     .catch((err) => {
+      if (err.name === 'ValidationError') {
+        next(new ValidationError({ message: err.message }));
+        return;
+      }
       next(err);
     });
 };
@@ -114,7 +123,7 @@ module.exports.login = (req, res, next) => {
 
 // get data about active user
 module.exports.getProfileInfo = (req, res, next) => {
-  const currentUserId = req.cookies._id;
+  const currentUserId = req.user._id;
   User.findById(currentUserId)
     .then((user) => {
       res.send({ data: user });

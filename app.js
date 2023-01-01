@@ -5,7 +5,6 @@ const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const rateLimit = require('express-rate-limit');
 const helmet = require('helmet');
-const cookieParser = require('cookie-parser');
 
 const { errorAnswers } = require('./utils/constants');
 const auth = require('./middlewares/auth');
@@ -42,9 +41,6 @@ process.on('uncaughtException', (err, origin) => {
 });
 
 mongoose.connect('mongodb://localhost:27017/mestodb');
-
-// for user._id parsing
-app.use(cookieParser());
 
 // set lim of requests
 app.use(limiter);

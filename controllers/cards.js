@@ -2,6 +2,7 @@ const Card = require('../models/card');
 const { errorAnswers } = require('../utils/constants');
 const { CastError } = require('../utils/errorHandler/CastError');
 const { ForbiddenError } = require('../utils/errorHandler/ForbiddenError');
+const { ValidationError } = require('../utils/errorHandler/ValidationError');
 
 module.exports.getAllCards = (req, res, next) => {
   Card.find({})
@@ -18,6 +19,10 @@ module.exports.createCard = (req, res, next) => {
   Card.create({ name, link, owner })
     .then((data) => res.send({ card: data }))
     .catch((err) => {
+      if (err.name === 'ValidationError') {
+        next(new ValidationError({ message: err.message }));
+        return;
+      }
       next(err);
     });
 };
@@ -40,6 +45,7 @@ module.exports.deleteCardbyId = (req, res, next) => {
         return;
       }
 
+      // removing
       Card.findByIdAndRemove(cardId, (err, removingCard) => {
         if (err) {
           next(err);

@@ -24,7 +24,7 @@ const userSchema = new mongoose.Schema({
       validator(v) {
         return (/^(http|https)\W+[w]{0,3}\S*[#]*$/gi).test(v);
       },
-      message: 'Incorrect avatar link',
+      message: 'Некорректная ссылка на аватар',
     },
   },
   email: {
@@ -35,7 +35,7 @@ const userSchema = new mongoose.Schema({
       validator(v) {
         return validator.isEmail(v);
       },
-      message: 'Incorrect email address',
+      message: 'Некорректный email',
     },
   },
   password: {
