@@ -16,10 +16,10 @@ const userRouter = require('./routes/users');
 const cardRouter = require('./routes/cards');
 
 const { UnknownError } = require('./utils/errorHandler/UnknownError');
-const { WrongRouteError } = require('./utils/errorHandler/WrongRouteError');
 const { prepareLogFile } = require('./utils/logPreparation/prepareLogFile');
 
 const { login, createUser } = require('./controllers/users');
+const { CastError } = require('./utils/errorHandler/CastError');
 
 const limiter = rateLimit({
   windowMs: 5 * 60 * 1000,
@@ -78,7 +78,7 @@ app.use('/users', auth, userRouter);
 app.use('/cards', auth, cardRouter);
 
 app.use((req, res, next) => {
-  next(new WrongRouteError({
+  next(new CastError({
     message: errorAnswers.routeError,
   }));
 });
