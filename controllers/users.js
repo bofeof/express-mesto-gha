@@ -4,7 +4,7 @@ const User = require('../models/user');
 const { errorAnswers } = require('../utils/constants');
 
 const { DublicateDataError } = require('../utils/errorHandler/DublicateDataError');
-const { CastError } = require('../utils/errorHandler/CastError');
+const { NotFoundError } = require('../utils/errorHandler/NotFoundError');
 const { ValidationError } = require('../utils/errorHandler/ValidationError');
 
 module.exports.getAllUsers = (req, res, next) => {
@@ -22,7 +22,7 @@ module.exports.getUserById = (req, res, next) => {
     .then((user) => {
       // correct id but doesnt exist in db
       if (!user) {
-        next(new CastError({ message: errorAnswers.userIdError }));
+        next(new NotFoundError({ message: errorAnswers.userIdError }));
         return;
       }
       res.send({ data: user });
@@ -33,14 +33,9 @@ module.exports.getUserById = (req, res, next) => {
 };
 
 module.exports.createUser = (req, res, next) => {
-  const {
-    name, about, avatar, email, password,
-  } = req.body;
+  const { password } = req.body;
   bcrypt.hash(password, 10).then((hash) => User.create({
-    name,
-    about,
-    avatar,
-    email,
+    ...req.body,
     password: hash,
   })
     .then((user) => {
@@ -56,7 +51,7 @@ module.exports.createUser = (req, res, next) => {
       // check 11000, user already exists
       if (err.code === 11000) {
         next(new DublicateDataError({
-          message: errorAnswers.creationUserError,
+          message: errorAnswers.userExistsError,
         }));
         return;
       }

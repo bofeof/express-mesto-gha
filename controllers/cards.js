@@ -1,6 +1,6 @@
 const Card = require('../models/card');
 const { errorAnswers } = require('../utils/constants');
-const { CastError } = require('../utils/errorHandler/CastError');
+const { NotFoundError } = require('../utils/errorHandler/NotFoundError');
 const { ForbiddenError } = require('../utils/errorHandler/ForbiddenError');
 const { ValidationError } = require('../utils/errorHandler/ValidationError');
 
@@ -35,7 +35,7 @@ module.exports.deleteCardbyId = (req, res, next) => {
   Card.findById(cardId)
     .then((card) => {
       if (!card) {
-        next(new CastError({ message: errorAnswers.removingCardError }));
+        next(new NotFoundError({ message: errorAnswers.removingCardError }));
         return;
       }
       // card exists
@@ -67,7 +67,7 @@ module.exports.likeCard = (req, res, next) => {
     .then((data) => {
       // correct id but doesnt exist in db
       if (!data) {
-        next(new CastError({ message: errorAnswers.settingLikeError }));
+        next(new NotFoundError({ message: errorAnswers.settingLikeError }));
         return;
       }
       res.send({ card: data });
@@ -85,7 +85,7 @@ module.exports.dislikeCard = (req, res, next) => {
     .then((data) => {
       // correct id but doesnt exist in db
       if (!data) {
-        next(new CastError({ message: errorAnswers.removingLikeError }));
+        next(new NotFoundError({ message: errorAnswers.removingLikeError }));
         return;
       }
       res.send({ card: data });

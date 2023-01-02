@@ -1,9 +1,9 @@
 const { writeDataToLogFile } = require('../logPreparation/writeDataToLogFile');
 
-class CastError extends Error {
+class NotFoundError extends Error {
   constructor({ message, logMessage }) {
     super(message);
-    this.name = 'CastError';
+    this.name = 'NotFoundError';
     this.statusCode = 404;
     this.logMessage = logMessage;
   }
@@ -13,4 +13,4 @@ class CastError extends Error {
   }
 }
 
-module.exports.CastError = CastError;
+module.exports.NotFoundError = NotFoundError;

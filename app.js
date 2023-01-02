@@ -19,7 +19,7 @@ const { UnknownError } = require('./utils/errorHandler/UnknownError');
 const { prepareLogFile } = require('./utils/logPreparation/prepareLogFile');
 
 const { login, createUser } = require('./controllers/users');
-const { CastError } = require('./utils/errorHandler/CastError');
+const { NotFoundError } = require('./utils/errorHandler/NotFoundError');
 
 const limiter = rateLimit({
   windowMs: 5 * 60 * 1000,
@@ -54,7 +54,7 @@ app.post(
   '/signin',
   celebrate({
     body: Joi.object().keys({
-      email: Joi.string().required().email(),
+      email: Joi.string().email().required(),
       password: Joi.string().required(),
     }),
   }),
@@ -67,7 +67,7 @@ app.post(
       name: Joi.string().min(2).max(30),
       about: Joi.string().min(2).max(30),
       avatar: Joi.string().uri(),
-      email: Joi.string().required().email(),
+      email: Joi.string().email().required(),
       password: Joi.string().required(),
     }),
   }),
@@ -78,7 +78,7 @@ app.use('/users', auth, userRouter);
 app.use('/cards', auth, cardRouter);
 
 app.use((req, res, next) => {
-  next(new CastError({
+  next(new NotFoundError({
     message: errorAnswers.routeError,
   }));
 });
