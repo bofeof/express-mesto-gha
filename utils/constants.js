@@ -9,6 +9,7 @@ const errorAnswers = {
   routeError: 'Ошибка маршрутизации',
   tokenError: 'Ошибка с токеном авторизации',
   forbiddenError: 'Недостаточно прав для совершения действия',
+  wrongEmailPassword: 'Невозможно войти в Mesto: введены неверные почта и пароль',
 };
 const logFile = 'logs/Logs.log';
 
