@@ -7,7 +7,9 @@ const rateLimit = require('express-rate-limit');
 const helmet = require('helmet');
 
 const { errorAnswers } = require('./utils/constants');
+
 const auth = require('./middlewares/auth');
+const { requestLogger, errorLogger } = require('./middlewares/logger');
 
 const { PORT = 3000 } = process.env;
 const app = express();
@@ -16,28 +18,28 @@ const userRouter = require('./routes/users');
 const cardRouter = require('./routes/cards');
 
 const { UnknownError } = require('./utils/errorHandler/UnknownError');
-const { prepareLogFile } = require('./utils/logPreparation/prepareLogFile');
+// const { prepareLogFile } = require('./utils/logPreparation/prepareLogFile');
 
 const { login, createUser } = require('./controllers/users');
 const { NotFoundError } = require('./utils/errorHandler/NotFoundError');
 
 const limiter = rateLimit({
   windowMs: 5 * 60 * 1000,
-  max: 200, // 200 reqs per 5 min
+  max: 2000, // 200 reqs per 5 min
   standardHeaders: true,
   legacyHeaders: false,
 });
 
-prepareLogFile();
+// prepareLogFile();
 
 process.on('uncaughtException', (err, origin) => {
   const error = new UnknownError({
     message: `${origin} ${err.name} c текстом ${err.message} не была обработана. Обратите внимание!`,
     logMessage: `${origin} ${err.name} c текстом ${err.message} не была обработана. Обратите внимание!`,
   });
-  error.logError();
+  // error.logError();
   // eslint-disable-next-line no-console
-  console.log(`Непредвиденная ошибка! ${err.message}`);
+  console.log(`Непредвиденная ошибка! ${error.message}`);
 });
 
 mongoose.connect('mongodb://localhost:27017/mestodb');
@@ -49,6 +51,8 @@ app.use(helmet());
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+
+app.use(requestLogger);
 
 app.post(
   '/signin',
@@ -83,6 +87,7 @@ app.use((req, res, next) => {
   }));
 });
 
+app.use(errorLogger);
 app.use(errors());
 
 // message for user about some errors
