@@ -18,10 +18,17 @@ const userRouter = require('./routes/users');
 const cardRouter = require('./routes/cards');
 
 const { UnknownError } = require('./utils/errorHandler/UnknownError');
-// const { prepareLogFile } = require('./utils/logPreparation/prepareLogFile');
 
 const { login, createUser } = require('./controllers/users');
 const { NotFoundError } = require('./utils/errorHandler/NotFoundError');
+
+// CORS
+const allowedCors = [
+  'https://praktikum.tk',
+  'http://praktikum.tk',
+  'localhost:3000',
+];
+const DEFAULT_ALLOWED_METHODS = 'GET,HEAD,PUT,PATCH,POST,DELETE';
 
 const limiter = rateLimit({
   windowMs: 5 * 60 * 1000,
@@ -30,14 +37,11 @@ const limiter = rateLimit({
   legacyHeaders: false,
 });
 
-// prepareLogFile();
-
 process.on('uncaughtException', (err, origin) => {
   const error = new UnknownError({
     message: `${origin} ${err.name} c текстом ${err.message} не была обработана. Обратите внимание!`,
     logMessage: `${origin} ${err.name} c текстом ${err.message} не была обработана. Обратите внимание!`,
   });
-  // error.logError();
   // eslint-disable-next-line no-console
   console.log(`Непредвиденная ошибка! ${error.message}`);
 });
@@ -53,6 +57,25 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 app.use(requestLogger);
+
+// CORS
+app.use((req, res, next) => {
+  const { origin } = req.headers;
+  const { method } = req;
+  const requestHeaders = req.headers['access-control-request-headers'];
+
+  // res.header('Access-Control-Allow-Origin', "*");
+
+  if (allowedCors.includes(origin)) {
+    res.header('Access-Control-Allow-Origin', origin);
+  }
+  if (method === 'OPTIONS') {
+    res.header('Access-Control-Allow-Headers', requestHeaders);
+    res.header('Access-Control-Allow-Methods', DEFAULT_ALLOWED_METHODS);
+  }
+
+  next();
+});
 
 app.post(
   '/signin',
